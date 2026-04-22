@@ -6,7 +6,7 @@ import SellerDashboard from '../sellerDashbords'
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<div>Home</div>} />
+      <Route path="/" element={<BuyerDashboard />} />
       <Route path="/BuyerDashboard" element={<BuyerDashboard />} />
         <Route path="/SellerDashboard" element={<SellerDashboard />} />
     </Routes>
