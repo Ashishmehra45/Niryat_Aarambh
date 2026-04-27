@@ -57,9 +57,22 @@ const BuyerDashboard = () => {
     { id: "ORD-97544", date: "01 Mar 2026", item: "Cotton Rugs", qty: "50 pcs", amount: "₹1,25,000", status: "Delivered", supplier: "Panipat Looms" },
   ];
 
-  // --- SUB-COMPONENTS (VIEWS) ---
-  const MarketplaceView = () => (
+ const MarketplaceView = () => (
     <div className="space-y-8 animate-in fade-in duration-500">
+      
+      {/* --- NEW QUICK ACTION TOGGLE BAR (BUY / SELL) --- */}
+      <div className="flex flex-col sm:flex-row items-center justify-between bg-white rounded-2xl p-4 shadow-sm border border-slate-100 gap-4">
+         <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl w-full sm:w-auto">
+            <button className="flex-1 sm:flex-none px-6 py-2.5 rounded-lg bg-white shadow-sm text-blue-600 font-black text-sm transition-all flex items-center justify-center gap-2">
+               <ShoppingBag size={16}/> Buy Products
+            </button>
+            <button className="flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-slate-500 hover:text-slate-900 font-bold text-sm transition-all flex items-center justify-center gap-2">
+               <Package size={16}/> Sell Products
+            </button>
+         </div>
+         <p className="text-xs font-bold text-slate-400 hidden lg:block">You are currently viewing the Buyer's Marketplace.</p>
+      </div>
+
       {/* INDIA MART STYLE B2B BANNER */}
       <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 rounded-3xl p-8 lg:p-12 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="relative z-10 md:w-2/3">
@@ -68,9 +81,19 @@ const BuyerDashboard = () => {
           </span>
           <h2 className="text-3xl lg:text-4xl font-black leading-tight mb-4">Connect with India's Top Exporters & Manufacturers</h2>
           <p className="text-slate-300 text-sm lg:text-base font-medium mb-6">Get wholesale pricing, request custom quotes, and trade securely across borders.</p>
-          <div className="flex gap-4">
-            <button className="bg-blue-600 text-white px-6 py-3.5 rounded-xl font-black text-sm uppercase hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/30" onClick={() => setActiveTab("Post RFQ")}>Post Requirement</button>
-            {!isLoggedIn && <button className="bg-white text-slate-900 px-6 py-3.5 rounded-xl font-black text-sm uppercase hover:bg-slate-100 transition-all" onClick={() => setIsLoggedIn(true)}>Register Now</button>}
+          <div className="flex gap-4 flex-wrap">
+            <button className="bg-blue-600 text-white px-6 py-3.5 rounded-xl font-black text-sm uppercase hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/30" onClick={() => setActiveTab("Post RFQ")}>
+               Post Requirement
+            </button>
+            {!isLoggedIn && (
+               <button className="bg-white text-slate-900 px-6 py-3.5 rounded-xl font-black text-sm uppercase hover:bg-slate-100 transition-all" onClick={() => setIsLoggedIn(true)}>
+                  Register Now
+               </button>
+            )}
+            {/* Added Become a Seller CTA here as well for visibility */}
+            <button className="bg-slate-800 border border-slate-600 text-white px-6 py-3.5 rounded-xl font-black text-sm uppercase hover:bg-slate-700 transition-all">
+               Become a Seller
+            </button>
           </div>
         </div>
         
@@ -111,6 +134,7 @@ const BuyerDashboard = () => {
                  <h4 className="text-[15px] font-black text-slate-900 leading-snug mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">{prod.name}</h4>
                  <p className="text-xs font-bold text-slate-500 underline decoration-slate-200 mb-3">{prod.seller}</p>
                  
+                 {/* Tiered Pricing (B2B Standard) */}
                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 mb-4">
                     <div className="flex justify-between text-[10px] font-black uppercase text-slate-400 mb-2 border-b border-slate-200 pb-1">
                        <span>Quantity</span><span>Wholesale Price</span>
