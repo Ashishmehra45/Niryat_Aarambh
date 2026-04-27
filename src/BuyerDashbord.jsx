@@ -87,12 +87,12 @@ const BuyerDashboard = () => {
             </button>
             {!isLoggedIn && (
                <button className="bg-white text-slate-900 px-6 py-3.5 rounded-xl font-black text-sm uppercase hover:bg-slate-100 transition-all" onClick={() => setIsLoggedIn(true)}>
-                  Register Now
+                 Sell Products
                </button>
             )}
             {/* Added Become a Seller CTA here as well for visibility */}
             <button className="bg-slate-800 border border-slate-600 text-white px-6 py-3.5 rounded-xl font-black text-sm uppercase hover:bg-slate-700 transition-all">
-               Sell Products
+               Register Now
             </button>
           </div>
         </div>
