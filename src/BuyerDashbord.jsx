@@ -83,7 +83,7 @@ const BuyerDashboard = () => {
           <p className="text-slate-300 text-sm lg:text-base font-medium mb-6">Get wholesale pricing, request custom quotes, and trade securely across borders.</p>
           <div className="flex gap-4 flex-wrap">
             <button className="bg-blue-600 text-white px-6 py-3.5 rounded-xl font-black text-sm uppercase hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/30" onClick={() => setActiveTab("Post RFQ")}>
-               Post Requirement
+               Buy Products
             </button>
             {!isLoggedIn && (
                <button className="bg-white text-slate-900 px-6 py-3.5 rounded-xl font-black text-sm uppercase hover:bg-slate-100 transition-all" onClick={() => setIsLoggedIn(true)}>
@@ -92,7 +92,7 @@ const BuyerDashboard = () => {
             )}
             {/* Added Become a Seller CTA here as well for visibility */}
             <button className="bg-slate-800 border border-slate-600 text-white px-6 py-3.5 rounded-xl font-black text-sm uppercase hover:bg-slate-700 transition-all">
-               Become a Seller
+               Sell Products
             </button>
           </div>
         </div>
