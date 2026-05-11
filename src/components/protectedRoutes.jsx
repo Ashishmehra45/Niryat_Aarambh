@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 
 const ProtectedRoute = ({ role, children }) => {
   
-if (role === 'admin') {
+if (role === 'superadmin') {
   const adminData = JSON.parse(localStorage.getItem('adminData'));
   
   
