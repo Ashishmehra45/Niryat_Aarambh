@@ -1,17 +1,51 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Search, Bell, Menu, X, ShoppingBag, MessageSquare, MapPin, 
   Star, ShieldCheck, TrendingUp, Clock, Package, 
   ArrowUpRight, Filter, FileText, UserPlus, LogIn, ChevronDown, 
-  CheckCircle2, Settings, Send, Camera, UploadCloud, User
+  CheckCircle2, Settings, Send, Camera, UploadCloud, User, ArrowLeft, LogOut
 } from "lucide-react";
+import { Link, useNavigate,useLocation } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const BuyerDashboard = () => {
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Marketplace");
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Toggle header state, but tabs are fully unlocked
+  
+  // 🔥 Auth States
+  const [isLoggedIn, setIsLoggedIn] = useState(false); 
+  const [user, setUser] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(false);
 
-  // --- MOCK DATA ---
+  // 🔄 Check Login Status on Mount
+  useEffect(() => {
+    const token = localStorage.getItem('buyerToken');
+    const data = localStorage.getItem('buyerData');
+
+    if (token && data) {
+      setIsLoggedIn(true);
+      setUser(JSON.parse(data));
+    }
+  }, []);
+
+  // 🚪 Logout Function
+  const handleLogout = () => {
+    localStorage.removeItem('buyerToken');
+    localStorage.removeItem('buyerData');
+    setIsLoggedIn(false);
+    setUser(null);
+    toast.success("Logged out successfully!");
+    navigate('/buyer/register ',{ state: { showLogin: true } }); // Ya jahan bhi redirect karna ho
+  };
+
+  // 🎭 User Initials Generator (Ashish Mehra -> AM)
+  const getInitials = (name) => {
+    if (!name) return "U";
+    return name.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2);
+  };
+
+  // --- MOCK DATA (As it is) ---
   const products = [
     {
       id: 101,
@@ -57,10 +91,8 @@ const BuyerDashboard = () => {
     { id: "ORD-97544", date: "01 Mar 2026", item: "Cotton Rugs", qty: "50 pcs", amount: "₹1,25,000", status: "Delivered", supplier: "Panipat Looms" },
   ];
 
- const MarketplaceView = () => (
+  const MarketplaceView = () => (
     <div className="space-y-8 animate-in fade-in duration-500">
-      
-      {/* --- NEW QUICK ACTION TOGGLE BAR (BUY / SELL) --- */}
       <div className="flex flex-col sm:flex-row items-center justify-between bg-white rounded-2xl p-4 shadow-sm border border-slate-100 gap-4">
          <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl w-full sm:w-auto">
             <button className="flex-1 sm:flex-none px-6 py-2.5 rounded-lg bg-white shadow-sm text-blue-600 font-black text-sm transition-all flex items-center justify-center gap-2">
@@ -73,7 +105,6 @@ const BuyerDashboard = () => {
          <p className="text-xs font-bold text-slate-400 hidden lg:block">You are currently viewing the Buyer's Marketplace.</p>
       </div>
 
-      {/* INDIA MART STYLE B2B BANNER */}
       <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 rounded-3xl p-8 lg:p-12 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="relative z-10 md:w-2/3">
           <span className="inline-flex items-center gap-2 bg-blue-500/20 border border-blue-400/30 text-blue-300 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
@@ -81,33 +112,37 @@ const BuyerDashboard = () => {
           </span>
           <h2 className="text-3xl lg:text-4xl font-black leading-tight mb-4">Connect with India's Top Exporters & Manufacturers</h2>
           <p className="text-slate-300 text-sm lg:text-base font-medium mb-6">Get wholesale pricing, request custom quotes, and trade securely across borders.</p>
+          
           <div className="flex gap-4 flex-wrap">
-            <button className="bg-blue-600 text-white px-6 py-3.5 rounded-xl font-black text-sm uppercase hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/30" onClick={() => setActiveTab("Post RFQ")}>
-               Buy Products
-            </button>
-            {!isLoggedIn && (
-               <button className="bg-white text-slate-900 px-6 py-3.5 rounded-xl font-black text-sm uppercase hover:bg-slate-100 transition-all" onClick={() => setIsLoggedIn(true)}>
-                 Sell Products
+            {!isLoggedIn ? (
+              <>
+                <Link to="/buyer/register" className="bg-blue-600 text-white px-6 py-3.5 rounded-xl font-black text-sm uppercase hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/30 active:scale-95">
+                  Register as Buyer
+                </Link>
+                <button className="bg-white text-slate-900 px-6 py-3.5 rounded-xl font-black text-sm uppercase hover:bg-slate-100 transition-all shadow-lg shadow-white/10 active:scale-95">
+                  Register as Seller
+                </button>
+              </>
+            ) : (
+               <button className="bg-slate-800 border border-slate-600 text-white px-6 py-3.5 rounded-xl font-black text-sm uppercase hover:bg-slate-700 transition-all active:scale-95" onClick={() => setActiveTab("Post RFQ")}>
+                 Post a Requirement
                </button>
             )}
-            {/* Added Become a Seller CTA here as well for visibility */}
-            <button className="bg-slate-800 border border-slate-600 text-white px-6 py-3.5 rounded-xl font-black text-sm uppercase hover:bg-slate-700 transition-all">
-               Register Now
-            </button>
           </div>
         </div>
         
-        {/* RFQ Quick Form */}
         <div className="bg-white rounded-2xl p-6 w-full md:w-[350px] shadow-xl text-slate-900 z-10 hidden lg:block">
            <h3 className="font-black text-lg mb-4">Tell us what you need</h3>
-           <input type="text" placeholder="Product Name (e.g. Basmati Rice)" className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm mb-3 focus:border-blue-600 outline-none"/>
+           <input type="text" placeholder="Product Name (e.g. Basmati Rice)" className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm mb-3 focus:border-blue-600 outline-none transition-colors"/>
            <div className="flex gap-3 mb-4">
-              <input type="text" placeholder="Quantity" className="w-1/2 bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:border-blue-600 outline-none"/>
-              <select className="w-1/2 bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-500 focus:border-blue-600 outline-none">
+              <input type="text" placeholder="Quantity" className="w-1/2 bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:border-blue-600 outline-none transition-colors"/>
+              <select className="w-1/2 bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-500 focus:border-blue-600 outline-none cursor-pointer transition-colors">
                  <option>Pieces</option><option>Kg</option><option>Tons</option>
               </select>
            </div>
-           <button className="w-full bg-slate-900 text-white py-3 rounded-xl font-black text-sm hover:bg-blue-600 transition-colors" onClick={() => setActiveTab("Post RFQ")}>Get Quotes</button>
+           <button className="w-full bg-slate-900 text-white py-3 rounded-xl font-black text-sm hover:bg-blue-600 transition-colors active:scale-95" onClick={() => setActiveTab("Post RFQ")}>
+             Get Quotes
+           </button>
         </div>
       </div>
 
@@ -116,7 +151,6 @@ const BuyerDashboard = () => {
          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50"><Filter size={16}/> Filters</button>
       </div>
 
-      {/* PRODUCT GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
          {products.map((prod) => (
            <div key={prod.id} className="bg-white rounded-[1.5rem] border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col overflow-hidden">
@@ -129,12 +163,9 @@ const BuyerDashboard = () => {
                    </div>
                  )}
               </div>
-
               <div className="p-5 flex flex-col flex-1">
                  <h4 className="text-[15px] font-black text-slate-900 leading-snug mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">{prod.name}</h4>
                  <p className="text-xs font-bold text-slate-500 underline decoration-slate-200 mb-3">{prod.seller}</p>
-                 
-                 {/* Tiered Pricing (B2B Standard) */}
                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 mb-4">
                     <div className="flex justify-between text-[10px] font-black uppercase text-slate-400 mb-2 border-b border-slate-200 pb-1">
                        <span>Quantity</span><span>Wholesale Price</span>
@@ -145,12 +176,10 @@ const BuyerDashboard = () => {
                       </div>
                     ))}
                  </div>
-
                  <div className="flex items-center gap-4 text-xs font-bold text-slate-500 mb-5">
                     <span className="flex items-center gap-1"><MapPin size={14}/> {prod.origin}</span>
                     <span className="flex items-center gap-1 text-amber-500"><Star size={14} className="fill-amber-500"/> {prod.rating} ({prod.reviews})</span>
                  </div>
-
                  <div className="mt-auto grid grid-cols-2 gap-3">
                     <button className="w-full bg-blue-50 text-blue-700 border border-blue-100 py-2.5 rounded-lg font-black text-xs uppercase tracking-wider hover:bg-blue-600 hover:text-white transition-all" onClick={() => setActiveTab("Messages")}>Contact</button>
                     <button className="w-full bg-slate-900 text-white py-2.5 rounded-lg font-black text-xs uppercase tracking-wider hover:bg-slate-800 transition-all">Buy Now</button>
@@ -252,43 +281,55 @@ const BuyerDashboard = () => {
     </div>
   );
 
-  const MessagesView = () => (
-    <div className="h-[calc(100vh-140px)] flex gap-6 animate-in fade-in duration-500">
-       <div className="w-1/3 bg-white border border-slate-200 rounded-3xl p-4 flex flex-col shadow-sm">
-          <h3 className="font-black text-lg px-2 mb-4">Messages</h3>
-          <div className="space-y-2 overflow-y-auto pr-2">
-             {["Kisan Export Co.", "Royal Kashmir Weaves", "Malabar Spices"].map((name, i) => (
-                <div key={i} className={`p-4 rounded-2xl cursor-pointer transition-colors ${i === 0 ? 'bg-blue-50 border border-blue-100' : 'hover:bg-slate-50 border border-transparent'}`}>
-                   <div className="flex justify-between items-center mb-1">
-                      <h4 className="font-bold text-sm text-slate-900">{name}</h4>
-                      <span className="text-[10px] font-bold text-slate-400">10:42 AM</span>
-                   </div>
-                   <p className="text-xs text-slate-500 truncate">Yes, we can provide the phytosanitary certificate.</p>
-                </div>
-             ))}
-          </div>
-       </div>
-       <div className="flex-1 bg-white border border-slate-200 rounded-3xl flex flex-col shadow-sm">
-          <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-             <div>
-                <h3 className="font-black text-lg">Kisan Export Co.</h3>
-                <p className="text-xs font-bold text-emerald-600 flex items-center gap-1"><CheckCircle2 size={12}/> Verified Supplier</p>
-             </div>
-             <button className="text-sm font-bold text-blue-600 bg-blue-50 px-4 py-2 rounded-lg">View Profile</button>
-          </div>
-          <div className="flex-1 bg-slate-50 p-6 overflow-y-auto">
-             {/* Chat bubbles mockup */}
-             <div className="flex justify-end mb-4"><div className="bg-blue-600 text-white p-3 rounded-2xl rounded-tr-sm text-sm max-w-md shadow-sm">Hi, what is the minimum order quantity for Ragi?</div></div>
-             <div className="flex justify-start mb-4"><div className="bg-white border border-slate-200 text-slate-800 p-3 rounded-2xl rounded-tl-sm text-sm max-w-md shadow-sm">Hello Ashish! Our MOQ is 100kg for export. Yes, we can provide the phytosanitary certificate.</div></div>
-          </div>
-          <div className="p-4 bg-white border-t border-slate-100 flex items-center gap-3">
-             <button className="p-3 bg-slate-50 text-slate-500 hover:text-blue-600 rounded-xl"><UploadCloud size={20}/></button>
-             <input type="text" placeholder="Type a message..." className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-blue-600 outline-none"/>
-             <button className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md shadow-blue-200"><Send size={20}/></button>
-          </div>
-       </div>
-    </div>
-  );
+  const MessagesView = () => {
+    const [activeChat, setActiveChat] = useState(null);
+    const chatList = ["Kisan Export Co.", "Royal Kashmir Weaves", "Malabar Spices"];
+
+    return (
+      <div className="h-[calc(100vh-140px)] flex flex-col md:flex-row gap-0 md:gap-6 animate-in fade-in duration-500 overflow-hidden">
+         <div className={`w-full md:w-1/3 bg-white border-b md:border-b-0 md:border border-slate-200 md:rounded-3xl p-4 flex-col shadow-none md:shadow-sm h-full ${activeChat !== null ? 'hidden md:flex' : 'flex'}`}>
+            <h3 className="font-black text-xl md:text-lg px-2 mb-4 text-slate-900">Messages</h3>
+            <div className="space-y-2 overflow-y-auto pr-2">
+               {chatList.map((name, i) => (
+                  <div key={i} onClick={() => setActiveChat(i)} className={`p-4 rounded-2xl cursor-pointer transition-all duration-300 ${activeChat === i ? 'bg-blue-50 border border-blue-100' : 'hover:bg-slate-50 border border-transparent'}`}>
+                     <div className="flex justify-between items-center mb-1">
+                        <h4 className="font-bold text-sm text-slate-900">{name}</h4>
+                        <span className="text-[10px] font-bold text-slate-400">10:42 AM</span>
+                     </div>
+                     <p className="text-xs text-slate-500 truncate">Yes, we can provide the phytosanitary certificate.</p>
+                  </div>
+               ))}
+            </div>
+         </div>
+
+         <div className={`flex-1 bg-white md:border border-slate-200 md:rounded-3xl flex-col shadow-none md:shadow-sm h-full ${activeChat === null ? 'hidden md:flex' : 'flex'}`}>
+            <div className="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-10 md:rounded-t-3xl">
+               <div className="flex items-center gap-3">
+                  <button onClick={() => setActiveChat(null)} className="md:hidden p-2 -ml-2 text-slate-500 hover:text-slate-900 rounded-full hover:bg-slate-100 transition-colors">
+                     <ArrowLeft size={20} />
+                  </button>
+                  <div>
+                     <h3 className="font-black text-lg text-slate-900">{activeChat !== null ? chatList[activeChat] : "Kisan Export Co."}</h3>
+                     <p className="text-xs font-bold text-emerald-600 flex items-center gap-1"><CheckCircle2 size={12}/> Verified Supplier</p>
+                  </div>
+               </div>
+               <button className="text-xs md:text-sm font-bold text-blue-600 bg-blue-50 px-3 md:px-4 py-2 rounded-lg transition-colors hover:bg-blue-100">Profile</button>
+            </div>
+            
+            <div className="flex-1 bg-slate-50 p-4 md:p-6 overflow-y-auto">
+               <div className="flex justify-end mb-4"><div className="bg-blue-600 text-white p-3 rounded-2xl rounded-tr-sm text-sm max-w-[85%] md:max-w-md shadow-sm">Hi, what is the minimum order quantity for Ragi?</div></div>
+               <div className="flex justify-start mb-4"><div className="bg-white border border-slate-200 text-slate-800 p-3 rounded-2xl rounded-tl-sm text-sm max-w-[85%] md:max-w-md shadow-sm">Hello Ashish! Our MOQ is 100kg for export. Yes, we can provide the phytosanitary certificate.</div></div>
+            </div>
+            
+            <div className="p-3 md:p-4 bg-white border-t border-slate-100 flex items-center gap-2 md:gap-3 md:rounded-b-3xl">
+               <button className="p-2 md:p-3 bg-slate-50 text-slate-500 hover:text-blue-600 rounded-xl transition-colors"><UploadCloud size={20}/></button>
+               <input type="text" placeholder="Type a message..." className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 md:px-4 py-2 md:py-3 text-sm focus:border-blue-600 outline-none text-slate-900 transition-colors"/>
+               <button className="p-2 md:p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md shadow-blue-200 transition-all active:scale-95"><Send size={20}/></button>
+            </div>
+         </div>
+      </div>
+    );
+  };
 
   const SettingsView = () => (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
@@ -300,10 +341,10 @@ const BuyerDashboard = () => {
           <div className="md:col-span-1">
              <div className="bg-white border border-slate-200 rounded-3xl p-6 text-center shadow-sm">
                 <div className="w-24 h-24 bg-gradient-to-br from-indigo-600 to-blue-500 rounded-full mx-auto flex items-center justify-center text-white text-3xl font-black shadow-lg mb-4 relative">
-                   AM
+                   {getInitials(user?.fullName)}
                    <button className="absolute bottom-0 right-0 p-1.5 bg-white text-slate-900 rounded-full shadow-md border border-slate-200"><Camera size={14}/></button>
                 </div>
-                <h3 className="font-black text-lg">Ashish Mehra</h3>
+                <h3 className="font-black text-lg">{user?.fullName || "User Name"}</h3>
                 <p className="text-xs font-bold text-slate-500 mb-4">Global Partner</p>
                 <div className="bg-emerald-50 text-emerald-700 text-xs font-black uppercase tracking-widest py-2 rounded-lg flex items-center justify-center gap-1">
                    <ShieldCheck size={14}/> Verified Buyer
@@ -314,11 +355,11 @@ const BuyerDashboard = () => {
              <h3 className="font-black text-xl mb-6 border-b border-slate-100 pb-4">Business Details</h3>
              <div className="space-y-5">
                 <div className="grid grid-cols-2 gap-5">
-                   <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Full Name</label><input type="text" defaultValue="Ashish Mehra" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 outline-none"/></div>
-                   <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Company Name</label><input type="text" defaultValue="AM Imports LLC" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 outline-none"/></div>
+                   <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Full Name</label><input type="text" defaultValue={user?.fullName || ""} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 outline-none"/></div>
+                   <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Company Name</label><input type="text" defaultValue={user?.company || ""} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 outline-none"/></div>
                 </div>
-                <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Email Address</label><input type="email" defaultValue="ashish@example.com" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 outline-none"/></div>
-                <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Shipping Address</label><input type="text" defaultValue="Warehouse 4, Trade Zone, Dubai" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 outline-none"/></div>
+                <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Email Address</label><input type="email" defaultValue={user?.email || ""} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 outline-none"/></div>
+                <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Shipping Address</label><input type="text" defaultValue={user?.address || ""} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 outline-none"/></div>
                 <div className="pt-4 flex gap-4">
                    <button className="bg-blue-600 text-white px-6 py-3 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 shadow-md">Save Changes</button>
                    <button className="bg-white border border-slate-200 text-slate-600 px-6 py-3 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-slate-50">Cancel</button>
@@ -353,15 +394,22 @@ const BuyerDashboard = () => {
           ].map((item) => (
             <button 
                key={item.name} 
-               onClick={() => {
-                  setActiveTab(item.name); 
-                  setIsSidebarOpen(false);
-               }}
+               onClick={() => { setActiveTab(item.name); setIsSidebarOpen(false); }}
                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm ${activeTab === item.name ? "bg-slate-900 text-white shadow-md" : "text-slate-600 hover:bg-slate-100"}`}
             >
               {item.icon} {item.name}
             </button>
           ))}
+
+          {/* 🔥 Logout Button in Sidebar */}
+          {isLoggedIn && (
+            <button 
+               onClick={handleLogout}
+               className="w-full flex items-center gap-3 px-4 py-3 mt-8 rounded-xl transition-all font-bold text-sm text-red-600 hover:bg-red-50"
+            >
+              <LogOut size={18} /> Logout
+            </button>
+          )}
         </nav>
       </aside>
 
@@ -392,24 +440,39 @@ const BuyerDashboard = () => {
           <div className="flex items-center gap-4 ml-4">
              {!isLoggedIn ? (
                 <div className="flex items-center gap-2">
-                   <button className="hidden md:flex items-center gap-2 text-sm font-black text-slate-600 hover:text-blue-600 transition-colors px-3 py-2" onClick={() => setIsLoggedIn(true)}>
-                      <LogIn size={18}/> Sign In
-                   </button>
-                   <button className="flex items-center gap-2 bg-slate-900 text-white text-sm font-black px-5 py-2.5 rounded-xl hover:bg-slate-800 transition-all shadow-md" onClick={() => setIsLoggedIn(true)}>
-                      <UserPlus size={18}/> Register Free
-                   </button>
+                   <Link to="/login" className="text-sm font-bold text-slate-600 hover:text-blue-600 px-4 py-2 transition-colors">Sign In</Link>
+                   <Link to="/buyer/register" className="flex items-center gap-2 bg-slate-900 text-white text-sm font-black px-5 py-2.5 rounded-xl hover:bg-slate-800 transition-all shadow-md">
+                      <UserPlus size={18}/> Register Free 
+                   </Link>
                 </div>
              ) : (
                 <div className="flex items-center gap-5">
                    <button className="hidden sm:block bg-blue-50 text-blue-700 border border-blue-200 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest hover:bg-blue-100 transition-colors" onClick={() => setActiveTab("Post RFQ")}>Post Requirement</button>
                    <button className="relative text-slate-500 hover:text-slate-900 transition-colors"><Bell size={22} /><span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span></button>
-                   <div className="flex items-center gap-2 cursor-pointer border-l border-slate-200 pl-5" onClick={() => setActiveTab("Settings")}>
-                      <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-black text-sm shadow-md">AM</div>
-                      <div className="hidden md:block">
-                         <p className="text-xs font-black text-slate-900 leading-none">Ashish M.</p>
-                         <p className="text-[10px] font-bold text-emerald-600 uppercase">Verified</p>
+                   
+                   {/* 👤 Dynamic Profile Dropdown */}
+                   <div className="relative">
+                      <div className="flex items-center gap-2 cursor-pointer border-l border-slate-200 pl-5" onClick={() => setShowDropdown(!showDropdown)}>
+                         <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-black text-sm shadow-md">
+                            {getInitials(user?.fullName)}
+                         </div>
+                         <div className="hidden md:block">
+                            <p className="text-xs font-black text-slate-900 leading-none">{user?.fullName || "Buyer"}</p>
+                            <p className="text-[10px] font-bold text-emerald-600 uppercase">Verified</p>
+                         </div>
+                         <ChevronDown size={14} className={`text-slate-400 hidden md:block transition-transform ${showDropdown ? 'rotate-180' : ''}`}/>
                       </div>
-                      <ChevronDown size={14} className="text-slate-400 hidden md:block"/>
+
+                      {/* Dropdown Menu */}
+                      {showDropdown && (
+                        <div className="absolute right-0 mt-3 w-48 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                          <button onClick={() => {setActiveTab("Settings"); setShowDropdown(false);}} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 font-medium">My Profile</button>
+                          <hr className="my-1 border-slate-100" />
+                          <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-bold flex items-center gap-2">
+                            <LogOut size={16} /> Logout
+                          </button>
+                        </div>
+                      )}
                    </div>
                 </div>
              )}
@@ -428,11 +491,11 @@ const BuyerDashboard = () => {
                       <p className="text-xs font-medium mt-0.5">Join 50,000+ verified buyers on Niryat Arambh.</p>
                    </div>
                 </div>
-                <button className="w-full sm:w-auto bg-amber-500 text-white px-6 py-2 rounded-lg font-black text-xs uppercase tracking-widest shadow-md hover:bg-amber-600 transition-colors" onClick={() => setIsLoggedIn(true)}>Register For Free</button>
+                <Link to="/buyer/register" className="w-full sm:w-auto bg-amber-500 text-white px-6 py-2 rounded-lg font-black text-xs uppercase tracking-widest shadow-md hover:bg-amber-600 transition-colors text-center">Register For Free</Link>
              </div>
            )}
 
-           {/* DYNAMIC VIEWS RENDERING */}
+           {/* VIEWS RENDERING */}
            {activeTab === "Marketplace" && <MarketplaceView />}
            {activeTab === "My Orders" && <MyOrdersView />}
            {activeTab === "Post RFQ" && <PostRFQView />}
