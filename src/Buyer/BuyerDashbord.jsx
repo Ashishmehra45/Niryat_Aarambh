@@ -123,21 +123,7 @@ const BuyerDashboard = () => {
       reviews: 89,
       img: "https://images.unsplash.com/photo-1528476513691-07e6f563d97f?auto=format&fit=crop&q=80&w=600",
     },
-    {
-      id: 103,
-      name: "Wholesale Blue Art Pottery Vases",
-      seller: "Jaipur Artifacts",
-      verified: false,
-      tiers: [
-        { qty: "50-199 pcs", price: "₹1,200/pc" },
-        { qty: "200+ pcs", price: "₹850/pc" },
-      ],
-      moq: "50 pcs",
-      origin: "Rajasthan, IN",
-      rating: "4.6",
-      reviews: 42,
-      img: "https://images.unsplash.com/photo-1565193999202-5093a0c27fe4?auto=format&fit=crop&q=80&w=600",
-    },
+  
   ];
 
   const myOrders = [
