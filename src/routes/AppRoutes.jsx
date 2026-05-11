@@ -51,7 +51,7 @@ function AppRoutes() {
       <Route 
         path="/admin/dashboard" 
         element={
-          <ProtectedRoute role="admin">
+          <ProtectedRoute role="superadmin">
             <AdminDashboard />
           </ProtectedRoute>
         } 
