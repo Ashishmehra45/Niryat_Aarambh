@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ShieldAlert, Lock, Mail, ArrowRight, Zap, Activity, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios'; // 🔥 Axios import kiya API call ke liye
+import api from '../utils/axiosConfig'; // 🔥 Axios instance import kiya with baseURL and interceptors
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -25,8 +26,8 @@ const AdminLogin = () => {
     
     try {
       // 🔗 Backend ko API request maar rahe hain
-      const response = await axios.post('http://localhost:5000/api/admin/login', formData, {
-        withCredentials: true // 🚨 YEH BOHOT ZAROORI HAI COOKIE SAVE KARNE KE LIYE
+      const response = await api.post('/admin/login', formData,{
+        withCredentials: true, // 🔥 
       });
 
       if (response.status === 200) {
