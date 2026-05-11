@@ -30,13 +30,14 @@ const AdminLogin = () => {
       
       });
 
-      if (response.status === 200) {
-        // 🔥 Optional: Admin ka naam aur role local storage me save kar lo UI ke liye (token nahi)
-        localStorage.setItem('adminData', JSON.stringify(response.data.admin));
+     if (response.status === 200) {
 
-        toast.success(response.data.message || "Welcome back, System Operator!", { id: loadId });
-        navigate('/admin/dashboard'); // 👈 Success pe dashboard bhej diya
-      }
+  console.log(response.data.admin);
+
+  localStorage.setItem('adminData', JSON.stringify(response.data.admin));
+
+  navigate('/admin/dashboard');
+}
     } catch (error) {
       console.error("Admin Login Error:", error);
       // Backend se jo error aayega wo dikhayenge, warna default error
