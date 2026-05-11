@@ -27,7 +27,7 @@ const AdminLogin = () => {
     try {
       // 🔗 Backend ko API request maar rahe hain
       const response = await api.post('/admin/login', formData,{
-        withCredentials: true, // 🔥 
+      
       });
 
       if (response.status === 200) {
