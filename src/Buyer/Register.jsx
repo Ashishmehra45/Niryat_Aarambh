@@ -79,55 +79,66 @@ const handleLoginSubmit = async (e) => {
   return (
     <div className="min-h-screen flex w-full font-sans">
       
-      {/* LEFT PANEL - Dark Branding & Product Vibe (Hidden on Mobile) */}
-      <div className="hidden lg:flex w-1/2 bg-[#0a1128] text-white relative overflow-hidden flex-col justify-between p-12 transition-all duration-500">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+  {/* LEFT PANEL - Transparent Trade Exchange Branding (Hidden on Mobile) */}
+      <div className="hidden lg:flex w-1/2 bg-slate-900 text-white relative overflow-hidden flex-col justify-between p-12 transition-all duration-500">
+        {/* Background Glows */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
-            <PackageSearch size={22} className="text-white" />
+        {/* Logo & Brand Name (Dark Mode Optimized) */}
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/30 shrink-0">
+            {/* Yahan tu apna transparent logo laga sakta hai */}
+            <PackageSearch size={26} className="text-white" /> 
           </div>
-          <div>
-            <h1 className="font-black text-xl tracking-wide">SOURCE<span className="text-emerald-400">MART</span></h1>
-            <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">B2B Marketplace</p>
+          <div className="flex flex-col justify-center">
+            <h1 className="text-lg font-black tracking-tight text-white leading-tight uppercase">
+              <span className="text-blue-400">Transparent</span><br />
+              Trade Exchange
+            </h1>
+            <span className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase mt-1">
+              By Niryat Arambh
+            </span>
           </div>
         </div>
 
+        {/* Main Content & Catchy Headlines */}
         <div className="relative z-10 max-w-md">
-          <h2 className="text-4xl font-black leading-tight mb-6">
+          <h2 className="text-4xl font-black leading-tight mb-6 tracking-tight">
             {isLogin ? (
-              <>Welcome back to <br/><span className="text-emerald-400">SourceMart.</span></>
+              <>Welcome back to <br/><span className="text-blue-400">Transparent <br/>Trade Exchange.</span></>
             ) : (
-              <>Source high-quality <br/> products directly from <br/><span className="text-emerald-400">Verified Suppliers.</span></>
+              <>Source high-quality <br/> products directly from <br/><span className="text-blue-400">Indian Exporters.</span></>
             )}
           </h2>
-          <p className="text-slate-400 text-sm leading-relaxed mb-8">
+          <p className="text-slate-400 text-sm leading-relaxed mb-8 font-medium">
             {isLogin 
-              ? "Access your dashboard to track orders, manage inquiries, and discover new wholesale products."
-              : "Join thousands of buyers getting wholesale pricing, secure transactions, and seamless product sourcing tracking."}
+              ? "Access your dashboard to track orders, manage RFQs, and discover premium wholesale products from India."
+              : "Join thousands of global buyers getting wholesale pricing, verified suppliers, and seamless trade experience."}
           </p>
 
+          {/* Floating Feature Cards */}
           <div className="flex flex-col gap-4">
             <div className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-4 backdrop-blur-sm w-3/4 transform hover:-translate-y-1 transition-transform cursor-pointer">
-              <div className="bg-slate-800 p-3 rounded-xl"><Box size={20} className="text-emerald-400"/></div>
+              <div className="bg-slate-800 p-3 rounded-xl"><PackageSearch size={20} className="text-blue-400"/></div>
               <div>
-                <h4 className="text-sm font-bold">Premium Basmati Rice</h4>
-                <p className="text-xs text-slate-400">Min. Order: 100 Tons</p>
+                <h4 className="text-sm font-bold text-slate-100">Direct from Manufacturers</h4>
+                <p className="text-xs text-slate-400 font-medium">Zero Middleman Margins</p>
               </div>
             </div>
             <div className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-4 backdrop-blur-sm w-3/4 ml-8 transform hover:-translate-y-1 transition-transform cursor-pointer">
-              <div className="bg-slate-800 p-3 rounded-xl"><ShieldCheck size={20} className="text-blue-400"/></div>
+              <div className="bg-slate-800 p-3 rounded-xl"><ShieldCheck size={20} className="text-indigo-400"/></div>
               <div>
-                <h4 className="text-sm font-bold">Verified Manufacturers</h4>
-                <p className="text-xs text-slate-400">100% Quality Assured</p>
+                <h4 className="text-sm font-bold text-slate-100">Verified Exporters Only</h4>
+                <p className="text-xs text-slate-400 font-medium">100% Quality Assured</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="relative z-10 text-xs text-slate-500">
-          © 2026 SourceMart Platform. All rights reserved.
+        {/* Footer Text */}
+        <div className="relative z-10 text-xs text-slate-500 font-bold tracking-wide">
+          © 2026 Transparent Trade Exchange. All rights reserved.
         </div>
       </div>
 
