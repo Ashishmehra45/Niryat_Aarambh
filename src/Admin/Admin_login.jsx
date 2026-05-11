@@ -14,36 +14,51 @@ const AdminLogin = () => {
   };
 
   // 🔥 Isko async banaya taaki API call ka wait kar sake
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    
-    if (!formData.email || !formData.password) {
-      toast.error("Please enter both email and password!");
-      return;
+const handleLogin = async (e) => {
+  e.preventDefault();
+
+  if (!formData.email || !formData.password) {
+    toast.error("Please enter both email and password!");
+    return;
+  }
+
+  const loadId = toast.loading("Verifying Root Access...");
+
+  try {
+
+    const response = await api.post('/admin/login', formData);
+
+    if (response.status === 200) {
+
+      console.log(response.data.admin);
+
+      // Save Admin Data
+      localStorage.setItem(
+        'adminData',
+        JSON.stringify(response.data.admin)
+      );
+
+      // Success Toast
+      toast.success(
+        response.data.message || "Login Successful",
+        { id: loadId }
+      );
+
+      // Redirect
+      navigate('/admin/dashboard');
     }
 
-    const loadId = toast.loading("Verifying Root Access...");
-    
-    try {
-      // 🔗 Backend ko API request maar rahe hain
-      const response = await api.post('/admin/login', formData,{
-      
-      });
+  } catch (error) {
 
-     if (response.status === 200) {
+    console.error("Admin Login Error:", error);
 
-  console.log(response.data.admin);
-
-  localStorage.setItem('adminData', JSON.stringify(response.data.admin));
-
-  navigate('/admin/dashboard');
-}
-    } catch (error) {
-      console.error("Admin Login Error:", error);
-      // Backend se jo error aayega wo dikhayenge, warna default error
-      toast.error(error.response?.data?.message || "Invalid credentials! Unauthorized access.", { id: loadId });
-    }
-  };
+    toast.error(
+      error.response?.data?.message ||
+      "Invalid credentials! Unauthorized access.",
+      { id: loadId }
+    );
+  }
+};
 
   return (
     <div className="min-h-screen flex w-full font-sans bg-white">
