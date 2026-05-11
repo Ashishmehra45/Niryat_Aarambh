@@ -1,33 +1,36 @@
 import axios from 'axios';
 
-// 1. Ek custom axios instance banao
+// Dynamic Base URL
+const BASE_URL =
+  import.meta.env.MODE === "development"
+    ? "http://localhost:5000/api"
+    : "https://niryat-aarambh-backend.onrender.com/api";
+
+// Axios instance
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
-  withCredentials: true // Har request me cookie automatically jayegi
+  baseURL: BASE_URL,
+  withCredentials: true,
 });
 
-// 2. RESPONSE INTERCEPTOR: Ye har API response ko check karega
+// Response Interceptor
 api.interceptors.response.use(
   (response) => {
-    // Agar sab theek hai toh response aage bhej do
     return response;
   },
   (error) => {
-    // Agar error aayi aur uska status 401 (Unauthorized) hai
     if (error.response && error.response.status === 401) {
-      
+
       console.warn("Session Expired or No Cookie Found. Redirecting to Login...");
-      
-      // Frontend ka kachra (localstorage) saaf karo
+
+      // Clear local storage
       localStorage.removeItem('adminData');
       localStorage.removeItem('sellerData');
       localStorage.removeItem('buyerData');
 
-      // User ko login page par fenk do
-      // window.location.href use karte hain yahan kyunki React Router ka 'navigate' yahan directly kaam nahi karta
-      window.location.href = '/admin/login'; 
+      // Redirect
+      window.location.href = '/admin/login';
     }
-    
+
     return Promise.reject(error);
   }
 );
