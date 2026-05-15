@@ -1,242 +1,382 @@
-import React, { useState } from 'react';
-import { Mail, Lock, User, Building, Phone, ArrowRight, ShieldCheck, TrendingUp, Globe, LogIn, FileText } from 'lucide-react';
-import axios from 'axios';
-import toast from 'react-hot-toast';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from "react";
+import { 
+  Building2, User, Mail, Phone, MapPin, Globe, 
+  FileText, Briefcase, UploadCloud, ArrowRight, ShieldCheck, 
+  ArrowLeft, CheckCircle2, Lock, Check, X
+} from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 
-const SellerAuth = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  
-  // Toggle check via Router state or default false
-  const [isLogin, setIsLogin] = useState(location.state?.showLogin || false);
+// FIX: InputField ko main component ke bahar nikal diya gaya hai
+const InputField = ({ label, icon: Icon, type = "text", name, placeholder, required = false, disabled = false, value, onChange }) => (
+  <div className="flex flex-col gap-1.5">
+    <label className="text-sm font-semibold text-slate-700">{label} {required && <span className="text-red-500">*</span>}</label>
+    <div className="relative flex items-center">
+      <Icon className="absolute left-3 text-slate-400" size={18} />
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        disabled={disabled}
+        className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none transition-all ${
+          disabled ? "opacity-60 cursor-not-allowed" : "focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        }`}
+      />
+    </div>
+  </div>
+);
 
-  // Seller specific state
+const SellerRegistration = () => {
+  // Navigation & OTP State
+  const [step, setStep] = useState(1);
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Form State
   const [formData, setFormData] = useState({
-    companyName: '', fullName: '', email: '', phone: '', gstNumber: '', password: ''
+    businessName: "",
+    ownerName: "",
+    businessEmail: "",
+    businessPhone: "",
+    country: "",
+    state: "",
+    city: "",
+    address: "",
+    companyDescription: "",
+    gstNumber: "",
+    exportLicense: "",
+    website: "",
+    profileImage: null,
+    coverImage: null
   });
 
-  const [loginData, setLoginData] = useState({
-    email: '', password: ''
-  });
-
-  const handleRegisterChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleLoginChange = (e) => {
-    setLoginData({ ...loginData, [e.target.name]: e.target.value });
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: files[0] }));
   };
 
-  const handleRegisterSubmit = async (e) => {
-    e.preventDefault();
-    const loadId = toast.loading("Setting up your storefront...");
-    
-    try {
-      const response = await axios.post('http://localhost:5000/api/sellers/register', formData, { withCredentials: true });
-
-      if (response.status === 201) {
-        toast.success("Seller Account Created! Please Sign In.", { id: loadId }); 
-        setIsLogin(true); 
-      } 
-    } catch (error) {
-      console.error("API call failed:", error);
-      const errorMsg = error.response?.data?.message || "Registration failed!";
-      toast.error(errorMsg, { id: loadId });
+  // Step 1: Send OTP
+  const handleSendOTP = () => {
+    if (!formData.businessPhone || formData.businessPhone.length < 10) {
+      return toast.error("Please enter a valid phone number");
     }
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setOtpSent(true);
+      toast.success("OTP sent to your number! (Use 1234)");
+    }, 1000);
   };
 
-  const handleLoginSubmit = async (e) => {
-    e.preventDefault();
-    const loadId = toast.loading("Accessing seller dashboard...");
-    
-    try {
-      const response = await axios.post('http://localhost:5000/api/sellers/login', loginData, { withCredentials: true });
-
-      if (response.status === 200) {
-        localStorage.setItem('sellerToken', response.data.token);
-        localStorage.setItem('sellerData', JSON.stringify(response.data.seller));
-
-        toast.success("Welcome back, Partner!", { id: loadId });
-        navigate('/seller/dashboard'); 
-      }
-    } catch (error) {
-      console.error("Login failed:", error);
-      const errorMsg = error.response?.data?.message || "Server not responding.";
-      toast.error(errorMsg, { id: loadId });
+  // Step 1: Verify OTP
+  const handleVerifyOTP = () => {
+    if (otp !== "1234") {
+      return toast.error("Invalid OTP. Please use 1234 for testing.");
     }
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setOtpVerified(true);
+      toast.success("Phone Verified Successfully!");
+      setStep(2); 
+    }, 1000);
   };
+
+  // Step 3: Final Submit -> Moves to Step 4 (Pricing Table)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      toast.success("Registration Successful! Please choose a plan.");
+      setStep(4); // Moving to Subscription Step
+    }, 1500);
+  };
+
+  // Dummy Action for Plan Selection
+  const handlePlanSelection = (planName) => {
+    toast.success(`${planName} Plan Selected! Redirecting to Dashboard...`);
+    // Redirect logic yahan aayega baad me
+  };
+
+  // Pricing Table Data (Based on your image)
+  const pricingFeatures = [
+    { name: "Browse products", free: true, basic: true, premium: true },
+    { name: "Post buying requirement", free: true, basic: true, premium: true },
+    { name: "Seller registration", free: true, basic: true, premium: true },
+    { name: "Basic product listing", free: true, basic: true, premium: true },
+    { name: "Full product details", free: false, basic: true, premium: true },
+    { name: "Direct chat with buyers", free: false, basic: true, premium: true },
+    { name: "Product Timeline (Supply Chain)", free: false, basic: false, premium: true },
+    { name: "Platform visits & timeline creation", free: false, basic: false, premium: true },
+    { name: "Verified Genuine Badge", free: false, basic: false, premium: true },
+    { name: "Highest visibility in search results", free: false, basic: false, premium: true },
+    { name: "Photos, Videos & Certificates on timeline", free: false, basic: false, premium: true },
+  ];
 
   return (
-    <div className="min-h-screen flex w-full font-sans">
+    <div className="min-h-screen bg-slate-100 py-12 px-4 sm:px-6">
+      <Toaster position="top-right" />
       
-      {/* LEFT PANEL - Seller Focused Vibe */}
-      <div className="hidden lg:flex w-1/2 bg-[#020617] text-white relative overflow-hidden flex-col justify-between p-12 transition-all duration-500">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
-
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <Globe size={22} className="text-white" />
-          </div>
-          <div>
-            <h1 className="font-black text-xl tracking-wide">SOURCE<span className="text-blue-400">MART</span> <span className="text-xs text-slate-400 font-normal">for Sellers</span></h1>
-          </div>
-        </div>
-
-        <div className="relative z-10 max-w-md">
-          <h2 className="text-4xl font-black leading-tight mb-6">
-            {isLogin ? (
-              <>Grow your B2B <br/><span className="text-blue-400">Business Online.</span></>
-            ) : (
-              <>Reach Millions of <br/> Buyers <span className="text-blue-400">Globally.</span></>
-            )}
-          </h2>
-          <p className="text-slate-400 text-sm leading-relaxed mb-8">
-            {isLogin 
-              ? "Manage your product catalog, respond to RFQs, and track your manufacturing timeline in one place."
-              : "Set up your digital storefront, get the Verified Supplier badge, and start receiving bulk orders today."}
+      <div className="max-w-5xl mx-auto">
+        
+        {/* Header Section */}
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-black text-slate-800 mb-2">
+            {step === 4 ? "Choose Your Plan" : "Become a Verified Exporter"}
+          </h1>
+          <p className="text-slate-500">
+            {step === 4 
+              ? "Select the best subscription to grow your global reach." 
+              : "Register your business and connect with global buyers."}
           </p>
+        </div>
 
-          {/* Seller Feature Mockups */}
-          <div className="flex flex-col gap-4">
-            <div className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-4 backdrop-blur-sm w-3/4 transform hover:-translate-y-1 transition-transform cursor-pointer">
-              <div className="bg-slate-800 p-3 rounded-xl"><TrendingUp size={20} className="text-blue-400"/></div>
-              <div>
-                <h4 className="text-sm font-bold">Scale Your Sales</h4>
-                <p className="text-xs text-slate-400">Access high-intent B2B traffic</p>
-              </div>
+        {/* Progress Bar (Hide on Step 4) */}
+        {step < 4 && (
+          <div className="flex items-center justify-center mb-8 max-w-2xl mx-auto">
+            <div className={`flex flex-col items-center ${step >= 1 ? "text-blue-600" : "text-slate-400"}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mb-2 ${step >= 1 ? "bg-blue-600 text-white" : "bg-slate-200"}`}>1</div>
+              <span className="text-xs font-bold uppercase tracking-wider">Verification</span>
             </div>
-            <div className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-4 backdrop-blur-sm w-3/4 ml-8 transform hover:-translate-y-1 transition-transform cursor-pointer">
-              <div className="bg-slate-800 p-3 rounded-xl"><ShieldCheck size={20} className="text-emerald-400"/></div>
-              <div>
-                <h4 className="text-sm font-bold">Build Trust</h4>
-                <p className="text-xs text-slate-400">Get Verified & showcase timelines</p>
-              </div>
+            <div className={`flex-1 h-1 mx-4 rounded-full ${step >= 2 ? "bg-blue-600" : "bg-slate-200"}`}></div>
+            <div className={`flex flex-col items-center ${step >= 2 ? "text-blue-600" : "text-slate-400"}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mb-2 ${step >= 2 ? "bg-blue-600 text-white" : "bg-slate-200"}`}>2</div>
+              <span className="text-xs font-bold uppercase tracking-wider">Business</span>
+            </div>
+            <div className={`flex-1 h-1 mx-4 rounded-full ${step >= 3 ? "bg-blue-600" : "bg-slate-200"}`}></div>
+            <div className={`flex flex-col items-center ${step >= 3 ? "text-blue-600" : "text-slate-400"}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mb-2 ${step >= 3 ? "bg-blue-600 text-white" : "bg-slate-200"}`}>3</div>
+              <span className="text-xs font-bold uppercase tracking-wider">Documents</span>
             </div>
           </div>
-        </div>
+        )}
 
-        <div className="relative z-10 text-xs text-slate-500">
-          © 2026 SourceMart Seller Central.
-        </div>
-      </div>
-
-      {/* RIGHT PANEL - Dynamic Form Area */}
-      <div className="w-full lg:w-1/2 bg-white flex items-center justify-center p-8 sm:p-12 relative overflow-y-auto">
-        <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500 my-auto py-8">
+        {/* Main Form Wrapper */}
+        <form onSubmit={step === 3 ? handleSubmit : (e) => e.preventDefault()} className="bg-white rounded-2xl shadow-xl overflow-hidden min-h-[400px]">
           
-          <div className="mb-8">
-            <h2 className="text-3xl font-black text-slate-900 mb-2">
-              {isLogin ? 'Seller Login' : 'Become a Seller'}
-            </h2>
-            <p className="text-slate-500 text-sm">
-              {isLogin ? 'Access your seller dashboard.' : 'Start your journey as a verified supplier.'}
-            </p>
-          </div>
-
-          {/* ============================== */}
-          {/* LOGIN FORM */}
-          {/* ============================== */}
-          {isLogin ? (
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5 ml-1">Email Address</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><Mail size={18} className="text-slate-400" /></div>
-                  <input type="email" name="email" placeholder="sales@yourcompany.com" className="w-full bg-[#f4f7fa] border border-transparent rounded-xl pl-11 pr-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 outline-none transition-all" onChange={handleLoginChange} required />
+          {/* ================= STEP 1: OTP VERIFICATION ================= */}
+          {step === 1 && (
+            <div className="p-8 md:p-12 max-w-xl mx-auto flex flex-col justify-center h-full">
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Lock size={32} />
                 </div>
+                <h2 className="text-2xl font-bold text-slate-800">Verify your Number</h2>
+                <p className="text-sm text-slate-500 mt-2">We need to verify your phone number before creating your seller account.</p>
               </div>
 
-              <div>
-                <div className="flex justify-between items-center mb-1.5 ml-1 mr-1">
-                  <label className="block text-xs font-bold text-slate-700">Password</label>
-                  <a href="#" className="text-xs font-bold text-blue-600 hover:underline">Forgot Password?</a>
-                </div>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><Lock size={18} className="text-slate-400" /></div>
-                  <input type="password" name="password" placeholder="••••••••" className="w-full bg-[#f4f7fa] border border-transparent rounded-xl pl-11 pr-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 outline-none transition-all" onChange={handleLoginChange} required />
-                </div>
-              </div>
+              <InputField 
+                label="Phone Number" 
+                icon={Phone} 
+                type="tel" 
+                name="businessPhone" 
+                placeholder="+91 98765 43210" 
+                value={formData.businessPhone}
+                onChange={handleChange}
+                disabled={otpSent && !otpVerified} 
+              />
 
-              <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-colors mt-6 shadow-lg shadow-blue-200">
-                Sign In to Seller Central <LogIn size={18} />
-              </button>
-            </form>
-          ) : (
-            
-          /* ============================== */
-          /* REGISTRATION FORM (Initial) */
-          /* ============================== */
-            <form onSubmit={handleRegisterSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5 ml-1">Company / Business Name</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><Building size={18} className="text-slate-400" /></div>
-                  <input type="text" name="companyName" placeholder="M/s Sharma Exports" className="w-full bg-[#f4f7fa] border border-transparent rounded-xl pl-11 pr-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 outline-none transition-all" onChange={handleRegisterChange} required />
+              {!otpSent ? (
+                <button type="button" onClick={handleSendOTP} disabled={loading || !formData.businessPhone} className="w-full mt-6 bg-slate-800 hover:bg-slate-900 text-white py-3 rounded-lg font-bold transition-all">
+                  {loading ? "Sending..." : "Send OTP"}
+                </button>
+              ) : (
+                <div className="mt-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                  <InputField 
+                    label="Enter OTP (Use 1234)" 
+                    icon={CheckCircle2} 
+                    name="otp" 
+                    placeholder="Enter 4-digit OTP" 
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                  />
+                  <button type="button" onClick={handleVerifyOTP} disabled={loading || otp.length < 4} className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold transition-all">
+                    {loading ? "Verifying..." : "Verify & Continue"}
+                  </button>
+                  <p className="text-center text-xs font-medium text-slate-500 mt-4 cursor-pointer hover:text-blue-600" onClick={() => setOtpSent(false)}>Change Phone Number</p>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 ml-1">Contact Person Name</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><User size={18} className="text-slate-400" /></div>
-                    <input type="text" name="fullName" placeholder="John Doe" className="w-full bg-[#f4f7fa] border border-transparent rounded-xl pl-11 pr-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 outline-none transition-all" onChange={handleRegisterChange} required />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 ml-1">Phone Number</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><Phone size={18} className="text-slate-400" /></div>
-                    <input type="tel" name="phone" placeholder="+91 98765" className="w-full bg-[#f4f7fa] border border-transparent rounded-xl pl-11 pr-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 outline-none transition-all" onChange={handleRegisterChange} required />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5 ml-1">Business Email</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><Mail size={18} className="text-slate-400" /></div>
-                  <input type="email" name="email" placeholder="sales@company.com" className="w-full bg-[#f4f7fa] border border-transparent rounded-xl pl-11 pr-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 outline-none transition-all" onChange={handleRegisterChange} required />
-                </div>
-              </div>
-
-              {/* B2B Specific Field */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5 ml-1">GSTIN Number <span className="text-slate-400 font-normal">(Optional for now)</span></label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><FileText size={18} className="text-slate-400" /></div>
-                  <input type="text" name="gstNumber" placeholder="22AAAAA0000A1Z5" className="w-full bg-[#f4f7fa] border border-transparent rounded-xl pl-11 pr-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 outline-none uppercase transition-all" onChange={handleRegisterChange} />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5 ml-1">Password</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><Lock size={18} className="text-slate-400" /></div>
-                  <input type="password" name="password" placeholder="••••••••" className="w-full bg-[#f4f7fa] border border-transparent rounded-xl pl-11 pr-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 outline-none transition-all" onChange={handleRegisterChange} required />
-                </div>
-              </div>
-
-              <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-colors mt-4">
-                Register as Seller <ArrowRight size={18} />
-              </button>
-            </form>
+              )}
+            </div>
           )}
 
-          <div className="mt-6 text-center text-sm text-slate-500">
-            {isLogin ? (
-              <>Don't have a seller account? <button type="button" onClick={() => setIsLogin(false)} className="text-blue-600 font-bold hover:underline outline-none">Sign Up</button></>
-            ) : (
-              <>Already a registered seller? <button type="button" onClick={() => setIsLogin(true)} className="text-blue-600 font-bold hover:underline outline-none">Sign In</button></>
-            )}
-          </div>
+          {/* ================= STEP 2: BUSINESS & LOCATION ================= */}
+          {step === 2 && (
+             <div className="animate-in fade-in zoom-in-95 duration-300">
+              <div className="p-8 border-b border-slate-100">
+                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-6">
+                  <Briefcase className="text-blue-600" size={20} /> Business Details
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <InputField label="Business Name" icon={Building2} name="businessName" placeholder="Enter registered company name" value={formData.businessName} onChange={handleChange} required />
+                  <InputField label="Owner/Contact Name" icon={User} name="ownerName" placeholder="Enter your full name" value={formData.ownerName} onChange={handleChange} required />
+                  <InputField label="Business Email" icon={Mail} type="email" name="businessEmail" placeholder="contact@company.com" value={formData.businessEmail} onChange={handleChange} required />
+                  <InputField label="Phone Number" icon={CheckCircle2} type="tel" name="businessPhone" value={formData.businessPhone} onChange={handleChange} disabled={true} /> 
+                </div>
+              </div>
+              <div className="p-8 border-b border-slate-100 bg-slate-50/50">
+                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-6">
+                  <MapPin className="text-blue-600" size={20} /> Location Information
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <InputField label="Country" icon={Globe} name="country" placeholder="e.g. India" value={formData.country} onChange={handleChange} required />
+                  <InputField label="State" icon={MapPin} name="state" placeholder="e.g. Maharashtra" value={formData.state} onChange={handleChange} required />
+                  <InputField label="City" icon={MapPin} name="city" placeholder="e.g. Mumbai" value={formData.city} onChange={handleChange} required />
+                  <div className="md:col-span-2 lg:col-span-3">
+                    <InputField label="Full Address" icon={MapPin} name="address" placeholder="Enter complete office/factory address" value={formData.address} onChange={handleChange} required />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
-        </div>
+          {/* ================= STEP 3: LEGAL & MEDIA ================= */}
+          {step === 3 && (
+            <div className="animate-in fade-in zoom-in-95 duration-300">
+              <div className="p-8 border-b border-slate-100">
+                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-6">
+                  <ShieldCheck className="text-blue-600" size={20} /> Legal & Identity
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <InputField label="GST Number" icon={FileText} name="gstNumber" placeholder="Enter GSTIN" value={formData.gstNumber} onChange={handleChange} required />
+                  <InputField label="Export License (IEC)" icon={FileText} name="exportLicense" placeholder="Import Export Code" value={formData.exportLicense} onChange={handleChange} />
+                  <InputField label="Website (Optional)" icon={Globe} name="website" placeholder="https://www.yourcompany.com" value={formData.website} onChange={handleChange} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-semibold text-slate-700">Company Description</label>
+                  <textarea name="companyDescription" value={formData.companyDescription} onChange={handleChange} placeholder="Tell buyers about your manufacturing capacity..." rows="4" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none transition-all resize-none"></textarea>
+                </div>
+              </div>
+
+              <div className="p-8 bg-slate-50/50">
+                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-6">
+                  <UploadCloud className="text-blue-600" size={20} /> Brand Media
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center cursor-pointer relative">
+                    <input type="file" name="profileImage" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" />
+                    <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3"><User size={24} /></div>
+                    <p className="text-sm font-semibold text-slate-700">Upload Company Logo</p>
+                  </div>
+                  <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center cursor-pointer relative">
+                    <input type="file" name="coverImage" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" />
+                    <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3"><UploadCloud size={24} /></div>
+                    <p className="text-sm font-semibold text-slate-700">Upload Cover Banner</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ================= STEP 4: SUBSCRIPTION PLAN ================= */}
+          {step === 4 && (
+            <div className="p-4 md:p-8 animate-in fade-in zoom-in-95 duration-500">
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-800 text-white">
+                      <th className="p-4 font-semibold border-b border-r border-slate-700 min-w-[250px]">Feature</th>
+                      <th className="p-4 font-semibold border-b border-r border-slate-700 text-center w-48">Free</th>
+                      <th className="p-4 font-semibold border-b border-r border-slate-700 text-center w-48">Basic (Paid)</th>
+                      <th className="p-4 font-semibold border-b border-slate-700 text-center w-48 bg-blue-600">Premium (Paid)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm text-slate-700 bg-white">
+                    {pricingFeatures.map((row, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-4 border-b border-r border-slate-200 font-medium">{row.name}</td>
+                        <td className="p-4 border-b border-r border-slate-200 text-center">
+                          {row.free ? <Check size={20} className="text-green-600 mx-auto" /> : <X size={20} className="text-slate-300 mx-auto" />}
+                        </td>
+                        <td className="p-4 border-b border-r border-slate-200 text-center">
+                          {row.basic ? <Check size={20} className="text-green-600 mx-auto" /> : <X size={20} className="text-slate-300 mx-auto" />}
+                        </td>
+                        <td className="p-4 border-b border-slate-200 text-center bg-blue-50/30">
+                          {row.premium ? <Check size={20} className="text-blue-600 mx-auto" /> : <X size={20} className="text-slate-300 mx-auto" />}
+                        </td>
+                      </tr>
+                    ))}
+                    {/* Action Buttons Row */}
+                    <tr>
+                      <td className="p-6 border-r border-slate-200 bg-slate-50"></td>
+                      <td className="p-6 border-r border-slate-200 text-center align-top bg-white">
+                        <button 
+                          type="button" 
+                          onClick={() => handlePlanSelection('Free')}
+                          className="w-full py-2.5 px-4 rounded-lg font-bold text-sm bg-white border-2 border-slate-800 text-slate-800 hover:bg-slate-800 hover:text-white transition-all shadow-sm"
+                        >
+                          Continue with Free Trial
+                        </button>
+                      </td>
+                      <td className="p-6 border-r border-slate-200 text-center align-top bg-white">
+                        <button 
+                          type="button" 
+                          onClick={() => handlePlanSelection('Basic')}
+                          className="w-full py-2.5 px-4 rounded-lg font-bold text-sm bg-slate-800 text-white hover:bg-slate-900 transition-all shadow-md"
+                        >
+                          Choose Basic
+                        </button>
+                      </td>
+                      <td className="p-6 text-center align-top bg-blue-50/30">
+                        <button 
+                          type="button" 
+                          onClick={() => handlePlanSelection('Premium')}
+                          className="w-full py-2.5 px-4 rounded-lg font-bold text-sm bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md shadow-blue-600/30"
+                        >
+                          Choose Premium
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ================= BOTTOM NAVIGATION BUTTONS (Hide on Step 4) ================= */}
+          {(step > 1 && step < 4) && (
+            <div className="p-6 border-t border-slate-200 bg-white flex justify-between items-center">
+              <button
+                type="button"
+                onClick={() => setStep(step - 1)}
+                className="text-slate-600 font-bold px-6 py-3 rounded-lg hover:bg-slate-100 flex items-center gap-2 transition-all"
+              >
+                <ArrowLeft size={18} /> Back
+              </button>
+
+              {step === 2 ? (
+                <button
+                  type="button"
+                  onClick={() => setStep(3)}
+                  className="bg-slate-800 hover:bg-slate-900 text-white px-8 py-3 rounded-lg font-bold flex items-center gap-2 transition-all"
+                >
+                  Continue <ArrowRight size={18} />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold flex items-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-md shadow-blue-600/20"
+                >
+                  {loading ? "Submitting..." : "Complete Registration"} <CheckCircle2 size={18} />
+                </button>
+              )}
+            </div>
+          )}
+
+        </form>
       </div>
     </div>
   );
 };
 
-export default SellerAuth;
+export default SellerRegistration;

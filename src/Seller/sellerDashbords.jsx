@@ -1,392 +1,307 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Package,
-  ShoppingCart,
-  Users,
-  BarChart3,
-  Settings,
-  Bell,
-  Search,
-  ArrowUpRight,
-  Plus,
-  Edit2,
-  Trash2,
-  Menu,
-  X,
-  MessageSquare,
-  LogOut,
-  ChevronDown,
-  ArrowLeft,
-  CheckCircle2,
-  UploadCloud,
-  Send,
-  FileText
+import React, { useState } from "react";
+import { 
+  LayoutDashboard, Package, MessageSquare, GitCommit, 
+  BarChart2, ShieldCheck, Crown, Lock, X, Zap, 
+  TrendingUp, Users, Eye, ChevronRight, Check, Menu
 } from "lucide-react";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
+
+// Mini Component for Modal Checkmarks
+const CheckCircleIcon = () => (
+  <div className="min-w-[20px] h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center mt-0.5">
+    <Check size={12} className="stroke-[3]" />
+  </div>
+);
 
 const SellerDashboard = () => {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("Overview");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  
-  // 🟢 Real Seller Auth States
-  const [seller, setSeller] = useState(null);
+  // STATE
+  const [currentPlan, setCurrentPlan] = useState("Free"); 
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [attemptedFeature, setAttemptedFeature] = useState("");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // New state for mobile menu
 
-  // --- 🔥 Fetch Seller Data on Load ---
-  useEffect(() => {
-    const token = localStorage.getItem('sellerToken');
-    const data = localStorage.getItem('sellerData');
+  // Menu items
+  const menuItems = [
+    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, tiers: ["Free", "Basic", "Premium"] },
+    { id: "products", label: "My Products", icon: Package, tiers: ["Free", "Basic", "Premium"] },
+    { id: "chat", label: "Direct Buyer Chat", icon: MessageSquare, tiers: ["Basic", "Premium"] },
+    { id: "timeline", label: "Supply Chain Timeline", icon: GitCommit, tiers: ["Premium"] },
+    { id: "analytics", label: "Visits & Analytics", icon: BarChart2, tiers: ["Premium"] },
+    { id: "badge", label: "Verified Badge", icon: ShieldCheck, tiers: ["Premium"] },
+  ];
 
-    if (token && data) {
-      setSeller(JSON.parse(data));
+  // Handle Menu Click
+  const handleMenuClick = (item) => {
+    if (item.tiers.includes(currentPlan)) {
+      setActiveTab(item.id); 
+      setIsMobileMenuOpen(false); // Close menu on mobile after clicking
     } else {
-      toast.error("Please login to access Seller Central");
-      navigate('/seller/register'); 
+      setAttemptedFeature(item.label);
+      setShowUpgradeModal(true); 
+      setIsMobileMenuOpen(false); // Close menu on mobile to show popup clearly
     }
-  }, [navigate]);
-
-  // --- 🚪 Logout Logic ---
-  const handleLogout = () => {
-    localStorage.removeItem('sellerToken');
-    localStorage.removeItem('sellerData');
-    toast.success("Logged out from Seller Central!");
-    navigate('/seller/register', { state: { showLogin: true } }); 
   };
 
-  // --- 🎭 Avatar Initials ---
-  const getInitials = (name) => {
-    if (!name) return "S";
-    return name.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2);
-  };
-
-  // --- MOCK DATA ---
+  // Dummy Dashboard Stats
   const stats = [
-    { title: "Total Exports", value: "₹4,50,000", change: "+12.5%", icon: <BarChart3 size={20} /> },
-    { title: "Active Orders", value: "24", change: "+3 today", icon: <Package size={20} /> },
-    { title: "Buyer Inquiries", value: "156", change: "+18%", icon: <Users size={20} /> },
-    { title: "Store Rating", value: "4.8/5", change: "Top 5%", icon: <ArrowUpRight size={20} /> },
+    { label: "Total Views", value: currentPlan === "Premium" ? "12,450" : "Unlock", icon: Eye, color: "text-blue-600", bg: "bg-blue-100" },
+    { label: "Active Inquiries", value: currentPlan === "Free" ? "2" : "15", icon: Users, color: "text-green-600", bg: "bg-green-100" },
+    { label: "Profile Ranking", value: currentPlan === "Premium" ? "Top 5%" : "Low", icon: TrendingUp, color: "text-purple-600", bg: "bg-purple-100" },
   ];
-
-  const productList = [
-    { id: 1, name: "Organic Millets", category: "Food & Agri", price: "₹4,500", stock: "120 Units", img: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=300", status: "In Stock" },
-    { id: 2, name: "Cotton Fabric", category: "Textiles", price: "₹56,000", stock: "45 Rolls", img: "https://images.unsplash.com/photo-1528476513691-07e6f563d97f?auto=format&fit=crop&q=80&w=300", status: "In Stock" },
-    { id: 3, name: "Blue Pottery", category: "Home Decor", price: "₹8,200", stock: "12 Pcs", img: "https://images.unsplash.com/photo-1565193999202-5093a0c27fe4?auto=format&fit=crop&q=80&w=300", status: "Low Stock" },
-  ];
-
-  // --- VIEWS ---
-  const OverviewView = () => (
-    <div className="animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8">
-        <div>
-          <h2 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight leading-tight">Vyaapaar Overview</h2>
-          <p className="text-slate-500 font-medium text-sm mt-1">Export catalog and business metrics.</p>
-        </div>
-        <button className="w-full sm:w-auto bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-xl hover:bg-blue-600 transition-all">
-          <Plus size={20} /> Add Product
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-10">
-        {stats.map((stat, idx) => (
-          <div key={idx} className="bg-white p-5 lg:p-6 rounded-[1.5rem] lg:rounded-[2rem] border border-slate-100 shadow-sm">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">{stat.icon}</div>
-              <span className="text-emerald-500 text-[10px] font-black bg-emerald-50 px-2.5 py-1 rounded-full">{stat.change}</span>
-            </div>
-            <p className="text-slate-400 text-[10px] font-black uppercase tracking-wider">{stat.title}</p>
-            <p className="text-xl lg:text-2xl font-black text-slate-800 mt-0.5">{stat.value}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="bg-white rounded-[1.5rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-6 lg:p-8 border-b border-slate-50 flex justify-between items-center">
-          <h3 className="font-black text-lg lg:text-xl text-slate-800">Product Catalog</h3>
-          <button className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg">View All</button>
-        </div>
-        <div className="overflow-x-auto overflow-y-hidden">
-          <div className="min-w-[600px] px-4 pb-4">
-            <table className="w-full text-left border-separate border-spacing-y-2">
-              <thead>
-                <tr className="text-slate-400 text-[10px] uppercase font-black tracking-widest">
-                  <th className="px-6 py-2">Details</th><th className="px-6 py-2">Price</th><th className="px-6 py-2">Stock</th><th className="px-6 py-2">Status</th><th className="px-6 py-2 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {productList.map((product) => (
-                  <tr key={product.id} className="bg-white hover:bg-slate-50/80 transition-all group">
-                    <td className="px-6 py-4 rounded-l-2xl border-y border-l border-slate-50">
-                      <div className="flex items-center gap-5">
-                        <div className="relative shrink-0">
-                          <img src={product.img} alt={product.name} className="w-16 h-16 rounded-2xl object-cover shadow-sm border border-slate-100 group-hover:scale-105 transition-transform duration-300" />
-                          <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-black/5"></div>
-                        </div>
-                        <div className="max-w-[150px] lg:max-w-none">
-                          <p className="font-bold text-base text-slate-800 leading-tight mb-1">{product.name}</p>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold">ID: #00{product.id}</span>
-                            <span className="text-[10px] text-blue-600 font-bold uppercase tracking-tighter">Verified</span>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 border-y border-slate-50">
-                      <p className="font-black text-slate-900"><span className="text-xs font-medium text-slate-400 mr-1 italic">Price:</span>{product.price}</p>
-                    </td>
-                    <td className="px-6 py-4 border-y border-slate-50">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-sm font-bold text-slate-700">{product.stock}</span>
-                        <div className="w-16 h-1 bg-slate-100 rounded-full overflow-hidden">
-                          <div className={`h-full ${product.status === "Low Stock" ? "bg-orange-400 w-1/3" : "bg-emerald-400 w-full"}`}></div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 border-y border-slate-50">
-                      <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm ${product.status === "Low Stock" ? "bg-orange-50 text-orange-600 border border-orange-100" : "bg-emerald-50 text-emerald-600 border border-emerald-100"}`}>{product.status}</span>
-                    </td>
-                    <td className="px-6 py-4 rounded-r-2xl border-y border-r border-slate-50 text-center">
-                      <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <button className="p-2 bg-slate-50 text-slate-400 hover:text-blue-600 hover:bg-white hover:shadow-sm rounded-xl border border-transparent hover:border-slate-100 transition-all"><Edit2 size={16} /></button>
-                        <button className="p-2 bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-white hover:shadow-sm rounded-xl border border-transparent hover:border-slate-100 transition-all"><Trash2 size={16} /></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const InquiriesView = () => (
-    <div className="animate-in fade-in duration-500">
-       <div className="bg-white rounded-2xl p-8 text-center border-2 border-dashed border-slate-200">
-          <FileText className="mx-auto text-slate-300 mb-4" size={48} />
-          <h3 className="text-xl font-black text-slate-900">RFQ & Inquiries</h3>
-          <p className="text-slate-500">Bulk order requests and quotes from buyers will appear here...</p>
-       </div>
-    </div>
-  );
-
-  // 🔥 NEW MESSAGES VIEW ADDED HERE
-  const MessagesView = () => {
-    const [activeChat, setActiveChat] = useState(null);
-    const chatList = ["Global Traders LLC", "Amit Kumar (Retailer)", "Metro Supermarts"];
-
-    return (
-      <div className="h-[calc(100vh-180px)] flex flex-col md:flex-row gap-0 md:gap-6 animate-in fade-in duration-500 overflow-hidden">
-         {/* 1. Sidebar - Chat List */}
-         <div className={`w-full md:w-1/3 bg-white border-b md:border-b-0 md:border border-slate-200 md:rounded-3xl p-4 flex-col shadow-none md:shadow-sm h-full ${activeChat !== null ? 'hidden md:flex' : 'flex'}`}>
-            <h3 className="font-black text-xl md:text-lg px-2 mb-4 text-slate-900">Buyer Messages</h3>
-            <div className="space-y-2 overflow-y-auto pr-2">
-               {chatList.map((name, i) => (
-                  <div 
-                    key={i} 
-                    onClick={() => setActiveChat(i)}
-                    className={`p-4 rounded-2xl cursor-pointer transition-all duration-300 ${activeChat === i ? 'bg-blue-50 border border-blue-100' : 'hover:bg-slate-50 border border-transparent'}`}
-                  >
-                     <div className="flex justify-between items-center mb-1">
-                        <h4 className="font-bold text-sm text-slate-900 truncate">{name}</h4>
-                        <span className="text-[10px] font-bold text-slate-400 shrink-0">11:30 AM</span>
-                     </div>
-                     <p className="text-xs text-slate-500 truncate">Are you able to ship this to Dubai by next week?</p>
-                  </div>
-               ))}
-            </div>
-         </div>
-
-         {/* 2. Main Chat Area */}
-         <div className={`flex-1 bg-white md:border border-slate-200 md:rounded-3xl flex-col shadow-none md:shadow-sm h-full ${activeChat === null ? 'hidden md:flex' : 'flex'}`}>
-            {/* Chat Header */}
-            <div className="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-10 md:rounded-t-3xl">
-               <div className="flex items-center gap-3">
-                  {/* Mobile Back Button */}
-                  <button 
-                    onClick={() => setActiveChat(null)}
-                    className="md:hidden p-2 -ml-2 text-slate-500 hover:text-slate-900 rounded-full hover:bg-slate-100 transition-colors"
-                  >
-                     <ArrowLeft size={20} />
-                  </button>
-                  <div>
-                     <h3 className="font-black text-lg text-slate-900">{activeChat !== null ? chatList[activeChat] : "Select a Buyer"}</h3>
-                     <p className="text-xs font-bold text-slate-500 flex items-center gap-1">
-                       <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Online
-                     </p>
-                  </div>
-               </div>
-               <button className="text-xs md:text-sm font-bold text-blue-600 bg-blue-50 px-3 md:px-4 py-2 rounded-lg transition-colors hover:bg-blue-100">View RFQ</button>
-            </div>
-            
-            {/* Chat Body */}
-            <div className="flex-1 bg-slate-50 p-4 md:p-6 overflow-y-auto">
-               <div className="flex justify-start mb-4">
-                 <div className="bg-white border border-slate-200 text-slate-800 p-3 rounded-2xl rounded-tl-sm text-sm max-w-[85%] md:max-w-md shadow-sm">
-                   Hi, I saw your Organic Millets listing. Are you able to ship this to Dubai by next week?
-                 </div>
-               </div>
-               <div className="flex justify-end mb-4">
-                 <div className="bg-slate-900 text-white p-3 rounded-2xl rounded-tr-sm text-sm max-w-[85%] md:max-w-md shadow-sm">
-                   Hello! Yes, we have active export licenses for UAE. If you confirm the order today, we can dispatch it within 48 hours.
-                 </div>
-               </div>
-            </div>
-            
-            {/* Chat Input */}
-            <div className="p-3 md:p-4 bg-white border-t border-slate-100 flex items-center gap-2 md:gap-3 md:rounded-b-3xl">
-               <button className="p-2 md:p-3 bg-slate-50 text-slate-500 hover:text-blue-600 rounded-xl transition-colors">
-                 <UploadCloud size={20}/>
-               </button>
-               <input 
-                 type="text" 
-                 placeholder="Type your reply to the buyer..." 
-                 className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 md:px-4 py-2 md:py-3 text-sm focus:border-blue-600 outline-none text-slate-900 transition-colors"
-               />
-               <button className="p-2 md:p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md shadow-blue-200 transition-all active:scale-95">
-                 <Send size={20}/>
-               </button>
-            </div>
-         </div>
-      </div>
-    );
-  };
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC] font-sans text-slate-900 overflow-hidden">
-      
-      {/* SIDEBAR */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-300 lg:relative lg:translate-x-0 flex flex-col ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="p-8 flex justify-between items-center border-b border-slate-50">
-          <h1 className="text-2xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent italic tracking-tighter">
-            Niryat Arambh
-          </h1>
-          <button className="lg:hidden" onClick={() => setIsSidebarOpen(false)}>
-            <X size={24} />
-          </button>
-        </div>
-        
-        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1.5">
-          <p className="px-2 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Seller Menu</p>
-          {[
-            { name: "Overview", icon: <LayoutDashboard size={20} /> },
-            { name: "Products", icon: <Package size={20} /> },
-            { name: "Orders", icon: <ShoppingCart size={20} /> },
-            { name: "Inquiries", icon: <FileText size={20} /> }, // For RFQs
-            { name: "Messages", icon: <MessageSquare size={20} /> }, // 🔥 For Live Chat
-            { name: "Analytics", icon: <BarChart3 size={20} /> },
-            { name: "Settings", icon: <Settings size={20} /> },
-          ].map((item) => (
-            <button
-              key={item.name}
-              onClick={() => { setActiveTab(item.name); setIsSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all font-bold text-sm ${
-                activeTab === item.name
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-100"
-                  : "text-slate-500 hover:bg-slate-50"
-              }`}
-            >
-              {item.icon} {item.name}
-            </button>
-          ))}
-          
-          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-red-600 hover:bg-red-50 font-bold text-sm transition-all mt-8">
-             <LogOut size={20} /> Logout
-          </button>
-        </nav>
-      </aside>
+    <div className="flex h-[calc(100vh-64px)] bg-slate-50 overflow-hidden font-sans relative">
+      <Toaster position="top-right" />
 
-      {/* OVERLAY FOR MOBILE */}
-      {isSidebarOpen && <div className="fixed inset-0 bg-black/20 z-40 lg:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
+      {/* ================= MOBILE OVERLAY BACKDROP ================= */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/50 z-40 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
 
-      {/* MAIN CONTENT */}
-      <main className="flex-1 overflow-y-auto w-full">
-        
-        {/* HEADER */}
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-4 lg:px-10 sticky top-0 z-30">
-          <div className="flex items-center gap-3">
-            <button className="lg:hidden p-2 bg-slate-100 rounded-lg" onClick={() => setIsSidebarOpen(true)}>
-              <Menu size={20} />
-            </button>
-            <div className="relative hidden md:block w-64 lg:w-96">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input type="text" placeholder="Search inventory..." className="w-full bg-slate-50 border-none rounded-2xl py-2.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+      {/* ================= SIDEBAR (Responsive) ================= */}
+      <div className={`
+        fixed inset-y-0 left-0 z-1 w-64 bg-white border-r border-slate-200 flex flex-col justify-between
+        transform transition-transform duration-300 ease-in-out
+        ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
+        md:relative md:translate-x-0 md:flex
+      `}>
+        <div>
+          <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-black text-slate-800">Seller Hub</h2>
+              <div className="mt-2 flex items-center gap-2">
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                  currentPlan === 'Premium' ? 'bg-blue-100 text-blue-700' : 
+                  currentPlan === 'Basic' ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-700'
+                }`}>
+                  {currentPlan} Plan
+                </span>
+              </div>
             </div>
+            {/* Close button for mobile sidebar */}
+            <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden text-slate-400 hover:text-slate-700">
+              <X size={24} />
+            </button>
           </div>
 
-          <div className="flex items-center gap-3 lg:gap-5">
-            {/* Status Badge (Based on real data) */}
-            {seller?.status === 'pending' && (
-               <span className="hidden sm:inline-flex bg-orange-50 text-orange-600 border border-orange-200 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
-                 Pending Approval
-               </span>
-            )}
-            {seller?.status === 'approved' && (
-               <span className="hidden sm:inline-flex bg-emerald-50 text-emerald-600 border border-emerald-200 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
-                 Live Verified
-               </span>
-            )}
+          <div className="p-4 flex flex-col gap-1 overflow-y-auto">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const isLocked = !item.tiers.includes(currentPlan);
+              const isActive = activeTab === item.id;
 
-            <button className="p-2 text-slate-400 hover:text-blue-600 relative">
-              <Bell size={22} />
-              <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleMenuClick(item)}
+                  className={`flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all ${
+                    isActive 
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-600/20" 
+                      : "text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon size={18} className={isActive ? "text-white" : isLocked ? "text-slate-400" : "text-slate-500"} />
+                    <span className={`text-sm font-semibold ${isLocked && !isActive ? "text-slate-500" : ""}`}>
+                      {item.label}
+                    </span>
+                  </div>
+                  {isLocked && <Lock size={14} className="text-slate-400" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Upgrade Ad in Sidebar (Only shows if not Premium) */}
+        {currentPlan !== "Premium" && (
+          <div className="p-4 m-4 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl text-white relative overflow-hidden shadow-lg shrink-0">
+            <div className="absolute -top-6 -right-6 text-slate-700/50">
+              <Crown size={80} />
+            </div>
+            <div className="relative z-10">
+              <h4 className="text-sm font-bold flex items-center gap-2">
+                <Crown size={16} className="text-yellow-400" /> Go Premium
+              </h4>
+              <p className="text-xs text-slate-300 mt-2 mb-4 leading-relaxed">
+                Unlock supply chain timelines, direct chat, and highest search visibility.
+              </p>
+              <button 
+                onClick={() => { setAttemptedFeature("All Premium Features"); setShowUpgradeModal(true); setIsMobileMenuOpen(false); }}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded-lg transition-colors"
+              >
+                Upgrade Now
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ================= MAIN CONTENT AREA ================= */}
+      <div className="flex-1 overflow-y-auto flex flex-col w-full relative z-0">
+        
+        {/* Top Navbar Area */}
+        <div className="bg-white px-4 md:px-8 py-4 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sticky top-0 z-10 w-full">
+          
+          <div className="flex items-center gap-3">
+            {/* Mobile Hamburger Button */}
+            <button 
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="md:hidden text-slate-700 p-1 hover:bg-slate-100 rounded-md transition-colors"
+            >
+              <Menu size={24} />
             </button>
-            
-            {/* 👤 Dynamic Profile Header */}
-            <div className="relative border-l border-slate-200 pl-4 sm:pl-5">
-              <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setShowDropdown(!showDropdown)}>
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-black text-slate-800 leading-none group-hover:text-blue-600 transition-colors">
-                    {seller?.fullName || "Seller"}
-                  </p>
-                  <p className="text-[10px] text-blue-600 font-bold uppercase tracking-widest mt-1">
-                    {seller?.companyName || "Partner"}
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black shadow-md">
-                  {getInitials(seller?.companyName || seller?.fullName)}
-                </div>
-                <ChevronDown size={14} className={`text-slate-400 hidden md:block transition-transform ${showDropdown ? 'rotate-180' : ''}`}/>
+            <h1 className="text-xl md:text-2xl font-bold text-slate-800 capitalize truncate">
+              {activeTab.replace("-", " ")}
+            </h1>
+          </div>
+          
+          {/* TESTER CONTROLS - Adjusted for mobile */}
+          <div className="flex items-center gap-2 md:gap-3 bg-red-50 px-3 py-2 rounded-lg border border-red-200 w-full sm:w-auto overflow-x-auto">
+            <span className="text-[10px] md:text-xs font-bold text-red-600 whitespace-nowrap">Dev Test:</span>
+            <select 
+              className="text-xs md:text-sm bg-white border border-red-200 rounded px-2 py-1 outline-none font-semibold text-slate-700 w-full sm:w-auto"
+              value={currentPlan}
+              onChange={(e) => {
+                setCurrentPlan(e.target.value);
+                setActiveTab("dashboard"); 
+                toast.success(`Plan changed to ${e.target.value}`);
+              }}
+            >
+              <option value="Free">Free Plan</option>
+              <option value="Basic">Basic Plan</option>
+              <option value="Premium">Premium Plan</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Dashboard Content */}
+        <div className="p-4 md:p-8 max-w-6xl mx-auto w-full">
+          {activeTab === "dashboard" && (
+            <div className="space-y-6">
+              
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                {stats.map((stat, idx) => (
+                  <div key={idx} className="bg-white p-5 md:p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                      <p className="text-xs md:text-sm font-medium text-slate-500 mb-1">{stat.label}</p>
+                      {stat.value === "Unlock" ? (
+                        <div 
+                          onClick={() => { setAttemptedFeature(stat.label); setShowUpgradeModal(true); }}
+                          className="flex items-center gap-1.5 text-slate-400 text-lg md:text-xl font-bold cursor-pointer hover:text-blue-600 transition-colors"
+                        >
+                          <Lock size={16} /> Unlock
+                        </div>
+                      ) : (
+                        <h3 className="text-xl md:text-2xl font-black text-slate-800">{stat.value}</h3>
+                      )}
+                    </div>
+                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full ${stat.bg} ${stat.color} flex items-center justify-center shrink-0`}>
+                      <stat.icon size={20} className="md:w-6 md:h-6" />
+                    </div>
+                  </div>
+                ))}
               </div>
 
-              {/* Profile Dropdown */}
-              {showDropdown && (
-                <div className="absolute right-0 mt-4 w-48 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
-                  <div className="px-4 py-3 border-b border-slate-50 mb-2">
-                    <p className="text-xs font-black text-slate-900">{seller?.companyName}</p>
-                    <p className="text-[10px] font-bold text-slate-400 truncate">{seller?.email}</p>
-                  </div>
-                  <button onClick={() => {setActiveTab("Settings"); setShowDropdown(false);}} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 font-medium">Store Settings</button>
-                  <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-bold flex items-center gap-2">
-                    <LogOut size={16} /> Logout
-                  </button>
+              {/* Banner */}
+              <div className="bg-blue-600 rounded-2xl p-6 md:p-8 text-white flex flex-col md:flex-row items-start md:items-center justify-between shadow-lg shadow-blue-600/20 gap-4">
+                <div className="w-full md:w-2/3">
+                  <h2 className="text-xl md:text-2xl font-bold mb-2">Welcome to your Seller Dashboard!</h2>
+                  <p className="text-blue-100 text-xs md:text-sm leading-relaxed">
+                    Start adding your products to the global exchange. Upgrade to Premium to chat directly with buyers and show your entire supply chain journey.
+                  </p>
                 </div>
-              )}
+                <button className="w-full md:w-auto bg-white text-blue-600 font-bold px-6 py-3 rounded-lg hover:bg-slate-50 transition-colors whitespace-nowrap text-sm">
+                  Add New Product
+                </button>
+              </div>
+
             </div>
-          </div>
-        </header>
+          )}
 
-        {/* DYNAMIC CONTENT AREA */}
-        <div className="p-4 lg:p-10 max-w-7xl mx-auto">
-           {/* If seller is pending, show alert */}
-           {seller?.status === 'pending' && (
-             <div className="bg-orange-50 border border-orange-200 text-orange-800 px-6 py-4 rounded-2xl mb-8 flex items-center justify-between">
-                <div>
-                   <p className="font-black text-sm text-orange-900">Your account is under review.</p>
-                   <p className="text-xs mt-0.5">You can add products, but they won't be visible to buyers until an admin approves your profile.</p>
-                </div>
-                <button className="bg-orange-500 text-white px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider hidden sm:block" onClick={() => setActiveTab("Settings")}>Complete Profile</button>
-             </div>
-           )}
-
-           {activeTab === "Overview" && <OverviewView />}
-           {activeTab === "Inquiries" && <InquiriesView />}
-           {activeTab === "Messages" && <MessagesView />} 
+          {activeTab !== "dashboard" && (
+            <div className="bg-white p-8 md:p-12 rounded-2xl border border-slate-200 text-center shadow-sm">
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Zap size={32} className="md:w-10 md:h-10" />
+              </div>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-800 mb-2">
+                {activeTab.toUpperCase()} View
+              </h2>
+              <p className="text-sm text-slate-500 max-w-md mx-auto">
+                You have successfully accessed this feature using your <span className="font-semibold text-slate-700">{currentPlan}</span> plan.
+              </p>
+            </div>
+          )}
         </div>
-      </main>
+      </div>
+
+      {/* ================= UPGRADE MODAL POPUP ================= */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+            
+            {/* Modal Header */}
+            <div className="bg-slate-900 p-6 text-white relative">
+              <button 
+                onClick={() => setShowUpgradeModal(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-800 rounded-full p-1 transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-blue-500/50">
+                <Crown size={24} className="text-white" />
+              </div>
+              <h3 className="text-xl md:text-2xl font-black mb-1">Upgrade Required</h3>
+              <p className="text-slate-300 text-sm">
+                You need a higher plan to access <strong className="text-white">{attemptedFeature}</strong>.
+              </p>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6">
+              <div className="space-y-4 mb-8">
+                <div className="flex items-start gap-3">
+                  <CheckCircleIcon />
+                  <p className="text-xs md:text-sm text-slate-600"><strong className="text-slate-800">Direct Chat:</strong> Negotiate directly with global buyers.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircleIcon />
+                  <p className="text-xs md:text-sm text-slate-600"><strong className="text-slate-800">Supply Chain Timeline:</strong> Build trust with detailed process timelines.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircleIcon />
+                  <p className="text-xs md:text-sm text-slate-600"><strong className="text-slate-800">Verified Badge:</strong> Stand out in search results.</p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={() => {
+                    toast.success("Redirecting to Pricing Page...");
+                    setShowUpgradeModal(false);
+                  }}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-blue-600/20 text-sm md:text-base"
+                >
+                  View Premium Plans <ChevronRight size={18} />
+                </button>
+                <button 
+                  onClick={() => setShowUpgradeModal(false)}
+                  className="w-full bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold py-3.5 rounded-xl transition-colors text-sm md:text-base"
+                >
+                  Maybe Later
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };
