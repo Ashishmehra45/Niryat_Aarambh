@@ -33,7 +33,7 @@ function AppRoutes() {
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/buyer/register" element={<BuyerRegistration />} />
           <Route path="/seller/register" element={<SellerRegistration />} />
-          <Route path="/choose-plan" element={<ChoosePlan />} />
+          <Route path="/seller/choose-plan" element={<ChoosePlan />} />
           <Route path="/seller/login" element={<SellerLogin />} />
           
 
