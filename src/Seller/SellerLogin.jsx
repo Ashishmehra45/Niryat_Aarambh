@@ -12,7 +12,8 @@ const SellerLogin = () => {
   
   const navigate = useNavigate();
 
- const handleSendOTP = async (e) => {
+ // STEP 1: ACTUAL Handle Send OTP
+  const handleSendOTP = async (e) => {
     e.preventDefault();
     if (!phone || phone.length < 10) {
       toast.error("Please enter a valid 10-digit phone number!");
@@ -48,7 +49,7 @@ const SellerLogin = () => {
     const toastId = toast.loading("Verifying and Logging in...");
 
     try {
-      // ✅ ACTUAL BACKEND CALL TO VERIFY OTP & GET COOKIE
+      // ✅ ACTUAL BACKEND CALL TO VERIFY OTP
       const res = await api.post("/sellers/login", { 
         businessPhone: phone, 
         otp: otp 
@@ -56,7 +57,8 @@ const SellerLogin = () => {
 
       toast.success(res.data.message, { id: toastId });
       
-      // ✅ Set ID in localStorage as backup
+      // 🔥 SABSE ZAROORI UPDATE: Token aur ID dono ko localStorage mein save karo
+      localStorage.setItem("sellerToken", res.data.token); 
       localStorage.setItem("sellerId", res.data.seller._id);
 
       // ✅ Redirect to Dashboard

@@ -1,53 +1,54 @@
 import axios from "axios";
 
-// Dynamic Base URL
 const BASE_URL =
   window.location.hostname === "localhost"
     ? "http://localhost:5000/api"
     : "https://niryat-aarambh-backend.onrender.com/api";
 
-// Axios Instance
 const api = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,
 });
 
-// Response Interceptor
-api.interceptors.response.use(
-  (response) => {
-    return response;
+// 🔥 NAYA: REQUEST INTERCEPTOR (Har request ke sath token bhejne ke liye)
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("sellerToken"); // LocalStorage se token uthao
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`; // Header me set karo
+    }
+    return config;
   },
   (error) => {
+    return Promise.reject(error);
+  },
+);
+
+// RESPONSE INTERCEPTOR (Jo tera pehle se sahi chal raha tha)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
     if (error.response && error.response.status === 401) {
-      console.warn("Session Expired or No Cookie Found. Redirecting to Login...");
+      console.warn("Session Expired. Redirecting to Login...");
 
-      // 1. Pata karo user abhi kis route par hai
       const currentPath = window.location.pathname;
-      let redirectUrl = "/login"; // Default fallback
+      let redirectUrl = "/login";
 
-      // 2. Path ke hisaab se Login URL decide karo
-      if (currentPath.startsWith("/admin")) {
-        redirectUrl = "/admin/login";
-      } else if (currentPath.startsWith("/seller")) {
-        // Agar tera seller login "/seller/login" hai, toh wo likh. 
-        // Agar main login page "/login" hi hai seller ka, toh "/login" likh dena.
-        redirectUrl = "/seller/login"; 
-      } else if (currentPath.startsWith("/buyer")) {
-        redirectUrl = "/buyer/login";
-      }
+      if (currentPath.startsWith("/admin")) redirectUrl = "/admin/login";
+      else if (currentPath.startsWith("/seller")) redirectUrl = "/seller/login";
+      else if (currentPath.startsWith("/buyer")) redirectUrl = "/buyer/login";
 
-      // 3. Clear all Local Storage data
+      // Saara local data clear kar do
       localStorage.removeItem("adminData");
       localStorage.removeItem("sellerData");
       localStorage.removeItem("buyerData");
-      localStorage.removeItem("sellerId"); // Backup IDs bhi clear kar do
+      localStorage.removeItem("sellerId");
+      localStorage.removeItem("sellerToken"); // 🔥 Token bhi hategi
 
-      // 4. Sahi login page par bhej do
       window.location.href = redirectUrl;
     }
-
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;

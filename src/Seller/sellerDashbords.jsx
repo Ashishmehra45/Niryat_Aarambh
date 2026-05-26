@@ -85,31 +85,6 @@ const SellerDashboard = () => {
       tiers: ["Premium"],
     },
   ];
-
-  // --- FETCH PRODUCTS LOGIC ---
-  useEffect(() => {
-    if (activeTab === "products") {
-      fetchMyProducts();
-    }
-  }, [activeTab]);
-
-  // Frontend API Call
-  const fetchMyProducts = async () => {
-    setFetchingProducts(true);
-    try {
-      // Cookie automatically headers me chali jayegi
-      const res = await api.get("/sellers/my-products");
-      setMyProducts(res.data.products || []);
-    } catch (error) {
-      // 🔥 UPDATE: Agar error 401 hai, toh toast mat dikhao kyunki interceptor redirect kar raha hai
-      if (error.response && error.response.status !== 401) {
-        toast.error(error.response?.data?.error || "Failed to load products");
-      }
-    } finally {
-      setFetchingProducts(false);
-    }
-  };
-
   // --- HANDLERS ---
   const handleMenuClick = (item) => {
     if (item.tiers.includes(currentPlan)) {
@@ -120,10 +95,42 @@ const SellerDashboard = () => {
     }
   };
 
+ // --- FETCH PRODUCTS LOGIC ---
+  useEffect(() => {
+    if (activeTab === "products") {
+      fetchMyProducts();
+    }
+  }, [activeTab]);
+
+  // Frontend API Call
+  const fetchMyProducts = async () => {
+    setFetchingProducts(true);
+    try {
+      // Axios interceptor ab apne aap 'Authorization: Bearer <token>' bhej dega
+      const res = await api.get("/sellers/my-products");
+      setMyProducts(res.data.products || []);
+    } catch (error) {
+      // Agar error 401 hai, toh toast mat dikhao kyunki interceptor redirect kar raha hai
+      if (error.response && error.response.status !== 401) {
+        toast.error(error.response?.data?.error || "Failed to load products");
+      }
+    } finally {
+      setFetchingProducts(false);
+    }
+  };
+
+  // --- LOGOUT LOGIC ---
   const handleLogout = async () => {
     try {
+      // Backend api hit karo (optional, but good practice agar backend token invalidate karta hai)
       await api.post("/sellers/logout");
+    } catch (error) {
+      console.warn("Backend logout route failed or missing, but clearing local session anyway.");
+    } finally {
+      // 🔥 SABSE ZAROORI: LocalStorage se Token aur ID dono uda do
+      localStorage.removeItem("sellerToken");
       localStorage.removeItem("sellerId");
+      localStorage.removeItem("sellerData"); // Agar koi aur data rakha ho toh use bhi clear kar do
 
       // Toast turant dikhao
       toast.success("Logged out successfully!");
@@ -132,33 +139,30 @@ const SellerDashboard = () => {
       setTimeout(() => {
         navigate("/seller/login");
       }, 1000);
-    } catch (error) {
-      toast.error("Logout failed");
     }
   };
 
-  const handleInputChange = (e) =>
-    setProductData({ ...productData, [e.target.name]: e.target.value });
-  const handleImageChange = (e) => {
-    if (e.target.files) setProductImage(e.target.files[0]);
-  };
-
+  // --- ADD PRODUCT LOGIC ---
   const handleSubmitProduct = async (e) => {
     e.preventDefault();
     if (!productImage) return toast.error("Please upload an image!");
     setLoading(true);
 
     const formData = new FormData();
-    formData.append("sellerId", localStorage.getItem("sellerId"));
+    // ID bhejna optional hai agar backend req.user.id use kar raha hai, par safe side ke liye bhej rahe hain
+    formData.append("sellerId", localStorage.getItem("sellerId")); 
+    
     Object.keys(productData).forEach((key) =>
       formData.append(key, productData[key]),
     );
     formData.append("productImage", productImage);
 
     try {
+      // Axios interceptor isme bhi token add kar dega automatically
       await api.post("/sellers/add-product", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+      
       toast.success("Product added successfully!");
       setIsAddModalOpen(false);
       setProductImage(null);
@@ -171,13 +175,25 @@ const SellerDashboard = () => {
         moqUnit: "",
         description: "",
       });
+      
       if (activeTab === "products") fetchMyProducts(); // Reload list after adding
     } catch (error) {
-      toast.error(error.response?.data?.error || "Failed to add product");
+      // Agar 401 aaye toh interceptor sambhal lega, baaki errors yahan dikhenge
+      if (error.response && error.response.status !== 401) {
+        toast.error(error.response?.data?.error || "Failed to add product");
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  const handleInputChange = (e) =>
+    setProductData({ ...productData, [e.target.name]: e.target.value });
+  const handleImageChange = (e) => {
+    if (e.target.files) setProductImage(e.target.files[0]);
+  };
+
+  
 
   // Stats for Dashboard Tab
   const stats = [
