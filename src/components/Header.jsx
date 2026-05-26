@@ -1,70 +1,162 @@
-import React from "react";
-import { Menu, Search, ChevronDown } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Menu, Search, ChevronDown, User } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Header = () => {
+  const navigate = useNavigate();
+  const location = useLocation(); // Current URL track karne ke liye
+  
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userInitial, setUserInitial] = useState("");
+  const [activeMode, setActiveMode] = useState("buyer"); // Highlight active tab
+
+  // 1. Highlight tab based on URL
+  useEffect(() => {
+    if (location.pathname.includes("/seller")) {
+      setActiveMode("seller");
+    } else {
+      setActiveMode("buyer");
+    }
+  }, [location.pathname]);
+
+  // 2. Check Login Status
+  useEffect(() => {
+    const token = localStorage.getItem("token"); // Tere screenshot ke hisab se exact key
+    const adminData = localStorage.getItem("adminData");
+    const buyerData = localStorage.getItem("buyerData");
+
+    if (token || adminData || buyerData) {
+      setIsLoggedIn(true);
+      const savedName = localStorage.getItem("userName"); 
+      
+      if (savedName) {
+        setUserInitial(savedName.charAt(0).toUpperCase());
+      } else if (token) {
+        setUserInitial("S");
+      } else if (adminData) {
+        setUserInitial("A");
+      } else if (buyerData) {
+        setUserInitial("B");
+      } else {
+        setUserInitial("U");
+      }
+    } else {
+      setIsLoggedIn(false);
+    }
+  }, [location.pathname]); // URL change hone par re-check karega
+
+  // --- ROUTING HANDLERS ---
+  const handleBuyerClick = () => {
+    navigate("/buyer/dashboard"); // Dashboard ya home jahan tu chahe
+  };
+
+  const handleSellerClick = () => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/seller/dashboard"); // Logged in hai toh dashboard
+    } else {
+      navigate("/seller/login"); // Nahi hai toh login
+    }
+  };
+
+  // --- REUSABLE AVATAR/LOGIN BUTTON ---
+  const UserProfileSection = () => {
+    if (isLoggedIn) {
+      return (
+        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 border border-blue-200 flex items-center justify-center text-sm font-black cursor-pointer hover:bg-blue-200 transition-colors shadow-sm">
+          {userInitial}
+        </div>
+      );
+    }
+    return (
+      <button 
+        onClick={() => navigate("/seller/login")}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 font-bold transition-colors text-xs sm:text-sm border border-blue-100"
+      >
+        <User size={16} />
+        <span className="hidden xs:inline">Login</span>
+      </button>
+    );
+  };
+
   return (
     <div className="w-full bg-white shadow-sm sticky top-0 z-50">
-      {/* Top Dark Bar (Responsive: Stacks on very small screens, row on sm+) */}
-      <div className="bg-[#1e293b] text-slate-300 text-[10px] sm:text-[11px] font-medium px-4 sm:px-6 py-1.5 flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
-        <div className="flex gap-4 sm:gap-6">
+      
+      {/* 1. TOP DARK BAR - MOBILE OPTIMIZED */}
+      <div className="bg-[#1e293b] text-slate-300 py-1.5 px-4 sm:px-6 flex justify-center sm:justify-between items-center">
+        
+        {/* Hidden on mobile to save space, visible on desktop */}
+        <div className="hidden sm:flex gap-6 text-[11px] font-medium">
           <span className="cursor-pointer hover:text-white transition-colors">Why Choose Us?</span>
           <span className="cursor-pointer hover:text-white transition-colors">Help Center</span>
         </div>
-        <div className="flex items-center gap-1 bg-slate-800 rounded-full p-0.5">
-          <button className="px-3 sm:px-4 py-1 rounded-full bg-slate-600 text-white font-semibold">Buyer</button>
-          <button className="px-3 sm:px-4 py-1 rounded-full text-slate-300 hover:text-white font-semibold">Seller</button>
+
+        {/* Buyer / Seller Smart Toggle */}
+        <div className="flex items-center bg-slate-800 rounded-full p-0.5">
+          <button 
+            onClick={handleBuyerClick}
+            className={`px-6 py-1 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-300 ${
+              activeMode === "buyer" ? "bg-blue-600 text-white shadow-md" : "text-slate-300 hover:text-white"
+            }`}
+          >
+            Buyer
+          </button>
+          <button 
+            onClick={handleSellerClick}
+            className={`px-6 py-1 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-300 ${
+              activeMode === "seller" ? "bg-blue-600 text-white shadow-md" : "text-slate-300 hover:text-white"
+            }`}
+          >
+            Seller
+          </button>
         </div>
       </div>
 
-      {/* Main Navbar */}
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-2 sm:py-0 sm:h-16 flex flex-col sm:flex-row items-center justify-between border-b gap-3 sm:gap-0">
+      {/* 2. MAIN NAVBAR */}
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 sm:py-0 sm:h-16 flex flex-col sm:flex-row items-center justify-between border-b gap-3 sm:gap-0">
         
-        {/* Top Row for Mobile: Logo + Mobile Actions */}
+        {/* Top Row for Mobile: Logo + Profile */}
         <div className="flex w-full sm:w-auto items-center justify-between">
-          {/* Logo Area */}
-          <div className="flex items-center gap-2 sm:gap-3 cursor-pointer">
-            <Menu className="sm:hidden text-slate-700 mr-1" size={24} />
-            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-blue-500 rounded flex items-center justify-center text-[6px] sm:text-[7px] text-white font-black text-center leading-tight">
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
+            <Menu className="sm:hidden text-slate-700" size={24} />
+            <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-[7px] text-white font-black text-center leading-tight shadow-md">
               NIRYAT<br/>AARAMBH
             </div>
-            <div>
-              <h1 className="text-[13px] sm:text-[14px] font-black text-slate-800 uppercase leading-tight tracking-tight">
+            <div className="flex flex-col justify-center mt-1">
+              <h1 className="text-[14px] sm:text-[15px] font-black text-slate-800 uppercase leading-none tracking-tight">
                 Transparent<br />Trade Exchange
               </h1>
-              <p className="text-[8px] text-slate-500 font-bold tracking-widest uppercase mt-[1px]">By Niryat Aarambh</p>
+              <p className="text-[8px] text-slate-500 font-bold tracking-widest uppercase mt-0.5">By Niryat Aarambh</p>
             </div>
           </div>
 
-          {/* Mobile Avatar (Hidden on Desktop) */}
-          <div className="flex sm:hidden items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center text-xs font-bold cursor-pointer">
-              AM
-            </div>
+          {/* Mobile Profile Icon */}
+          <div className="flex sm:hidden items-center">
+            <UserProfileSection />
           </div>
         </div>
 
-        {/* Search Bar (Full width on Mobile, flexible on Desktop) */}
-        <div className="w-full sm:flex-1 max-w-2xl sm:mx-6 lg:mx-10 flex border rounded-md overflow-hidden shadow-sm">
+        {/* Search Bar - Full width on Mobile with top margin, inline on Desktop */}
+        <div className="w-full sm:flex-1 max-w-2xl sm:mx-6 lg:mx-10 flex border-2 border-slate-200 focus-within:border-blue-500 rounded-lg overflow-hidden shadow-sm transition-colors mt-1 sm:mt-0">
           <input 
-            className="flex-1 px-3 sm:px-4 py-1.5 sm:py-2 text-[13px] sm:text-sm outline-none text-slate-700 placeholder:text-slate-400" 
+            className="flex-1 px-4 py-2 text-sm outline-none text-slate-700 placeholder:text-slate-400" 
             placeholder="Search products, suppliers, or HS codes..." 
           />
-          <button className="bg-[#3b82f6] hover:bg-blue-600 text-white px-4 sm:px-6 flex items-center gap-2 text-sm font-medium transition-colors">
+          <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 sm:px-6 flex items-center gap-2 text-sm font-bold transition-colors">
             <Search size={16} /> <span className="hidden xs:inline">Search</span>
           </button>
         </div>
 
-        {/* Right Actions (Hidden on Mobile, visible on sm+) */}
+        {/* Right Actions (Desktop Only) */}
         <div className="hidden sm:flex items-center gap-4 lg:gap-6">
-          <button className="bg-[#3b82f6] hover:bg-blue-600 text-white px-4 lg:px-5 py-2 rounded text-sm font-semibold transition-colors">
+          <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-bold transition-colors shadow-md shadow-blue-600/20">
             Get Quote
           </button>
-          <div className="flex items-center gap-1 text-[13px] lg:text-sm text-slate-700 cursor-pointer">
-            English | INR <ChevronDown size={14} className="text-slate-500" />
+          <div className="flex items-center gap-1 text-[13px] font-bold text-slate-600 cursor-pointer hover:text-blue-600 transition-colors">
+            EN | INR <ChevronDown size={14} className="text-slate-400" />
           </div>
-          <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center text-sm font-bold cursor-pointer">
-            AM
-          </div>
+          
+          <UserProfileSection />
         </div>
       </div>
     </div>

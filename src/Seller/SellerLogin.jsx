@@ -173,7 +173,7 @@ const SellerLogin = () => {
         {/* Footer */}
         <div className="bg-slate-50 px-8 py-4 border-t border-slate-100 text-center">
           <p className="text-xs text-slate-500">
-            Don't have an account? <a href="/register" className="text-blue-600 font-bold hover:underline">Register here</a>
+            Don't have an account? <a href="/seller/register" className="text-blue-600 font-bold hover:underline">Register here</a>
           </p>
         </div>
 
