@@ -119,26 +119,31 @@ const SellerDashboard = () => {
     }
   };
 
-  // --- LOGOUT LOGIC ---
+// --- LOGOUT LOGIC ---
   const handleLogout = async () => {
     try {
-      // Backend api hit karo (optional, but good practice agar backend token invalidate karta hai)
-      await api.post("/sellers/logout");
-    } catch (error) {
-      console.warn("Backend logout route failed or missing, but clearing local session anyway.");
-    } finally {
-      // 🔥 SABSE ZAROORI: LocalStorage se Token aur ID dono uda do
+      // 1. Sabse pehle localStorage saaf karo (Frontend Cleanup First)
+      // Isse garantee ho jayegi ki chahe backend chale ya na chale, token pakka udeyga
       localStorage.removeItem("sellerToken");
       localStorage.removeItem("sellerId");
-      localStorage.removeItem("sellerData"); // Agar koi aur data rakha ho toh use bhi clear kar do
+      localStorage.removeItem("sellerData"); 
 
-      // Toast turant dikhao
+      // 2. Ab Backend api hit karo
+      await api.post("/sellers/logout");
+
+      // 3. Success Message
       toast.success("Logged out successfully!");
-
-      // 1 second (1000ms) ruk kar navigate karo
+    } catch (error) {
+      console.warn("Backend logout failed, but local session cleared.");
+      // Chahe error bhi aaye, message success ka hi do kyunki token delete ho chuka hai
+      toast.success("Logged out successfully!");
+    } finally {
+      // 4. Sabse end mein navigate karo
       setTimeout(() => {
-        navigate("/seller/login");
-      }, 1000);
+        // window.location.href use karna zyada safe hai logout ke time
+        // kyunki ye page ko hard refresh kar deta hai, jisse purani state clear ho jati hai
+        window.location.href = "/seller/login"; 
+      }, 500);
     }
   };
 

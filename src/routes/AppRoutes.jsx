@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 
 // 🧩 Components Import
 import Header from '../components/Header'; 
+import ProtectedRoute from '../components/protectedRoutes'; // 🔥 Yahan path check kar lena ki ProtectedRoute kahan hai
 
 // 📄 Pages Imports
 import BuyerDashboard from '../Buyer/BuyerDashbord';
@@ -28,24 +29,36 @@ function AppRoutes() {
       <div className="flex-grow bg-slate-50">
         <Routes>
           
-          {/* 🔓 ALL ROUTES (Bina Protection ke testing ke liye) */}
+          {/* 🔓 PUBLIC ROUTES (Bina Protection ke) */}
           <Route path="/" element={<BuyerDashboard />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/buyer/register" element={<BuyerRegistration />} />
           <Route path="/seller/register" element={<SellerRegistration />} />
           <Route path="/seller/choose-plan" element={<ChoosePlan />} />
           <Route path="/seller/login" element={<SellerLogin />} />
-          
 
-
-          {/* 🛒 BUYER */}
+          {/* 🛒 BUYER (Ise bhi baad me protect kar sakte ho) */}
           <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
 
-          {/* 🏢 SELLER */}
-          <Route path="/seller/dashboard" element={<SellerDashboard />} />
+          {/* 🏢 SELLER (🔥 SECURED WITH PROTECTED ROUTE) */}
+          <Route 
+            path="/seller/dashboard" 
+            element={
+              <ProtectedRoute role="seller">
+                <SellerDashboard />
+              </ProtectedRoute>
+            } 
+          />
           
-          {/* 👑 ADMIN */}
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          {/* 👑 ADMIN (🔥 SECURED) */}
+          <Route 
+            path="/admin/dashboard" 
+            element={
+              <ProtectedRoute role="superadmin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
           
         </Routes>
       </div>
