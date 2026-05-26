@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { 
   Building2, User, Mail, Phone, MapPin, Globe, 
   FileText, Briefcase, UploadCloud, ArrowRight, ShieldCheck, 
-  ArrowLeft, CheckCircle2, Lock, Check, X
+  ArrowLeft, CheckCircle2, Lock 
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import { useNavigate } from "react-router-dom"; 
 
-// FIX: InputField ko main component ke bahar nikal diya gaya hai
+import api from "../utils/axiosConfig"; 
+
 const InputField = ({ label, icon: Icon, type = "text", name, placeholder, required = false, disabled = false, value, onChange }) => (
   <div className="flex flex-col gap-1.5">
     <label className="text-sm font-semibold text-slate-700">{label} {required && <span className="text-red-500">*</span>}</label>
@@ -29,13 +31,14 @@ const InputField = ({ label, icon: Icon, type = "text", name, placeholder, requi
 );
 
 const SellerRegistration = () => {
-  // Navigation & OTP State
+  const navigate = useNavigate();
+
   const [step, setStep] = useState(1);
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  
   // Form State
   const [formData, setFormData] = useState({
     businessName: "",
@@ -64,107 +67,118 @@ const SellerRegistration = () => {
     setFormData((prev) => ({ ...prev, [name]: files[0] }));
   };
 
-  // Step 1: Send OTP
-  const handleSendOTP = () => {
+  // ================= API CALLS =================
+
+  const handleSendOTP = async () => {
     if (!formData.businessPhone || formData.businessPhone.length < 10) {
       return toast.error("Please enter a valid phone number");
     }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const response = await api.post("/sellers/send-otp", { 
+        businessPhone: formData.businessPhone 
+      });
       setOtpSent(true);
-      toast.success("OTP sent to your number! (Use 1234)");
-    }, 1000);
+      toast.success(response.data.message || "OTP sent to your number!");
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Failed to send OTP");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Step 1: Verify OTP
-  const handleVerifyOTP = () => {
-    if (otp !== "1234") {
-      return toast.error("Invalid OTP. Please use 1234 for testing.");
+  const handleVerifyOTP = async () => {
+    if (!otp) {
+      return toast.error("Please enter OTP.");
     }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const response = await api.post("/sellers/verify-otp", { 
+        businessPhone: formData.businessPhone,
+        otp: otp
+      });
       setOtpVerified(true);
-      toast.success("Phone Verified Successfully!");
+      toast.success(response.data.message || "Phone Verified Successfully!");
       setStep(2); 
-    }, 1000);
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Invalid OTP. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Step 3: Final Submit -> Moves to Step 4 (Pricing Table)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+
+    try {
+      const formDataToSend = new FormData();
+      
+      Object.keys(formData).forEach((key) => {
+        if (key !== "profileImage" && key !== "coverImage") {
+          formDataToSend.append(key, formData[key]);
+        }
+      });
+
+      if (formData.profileImage) {
+        formDataToSend.append("profileImage", formData.profileImage);
+      }
+      if (formData.coverImage) {
+        formDataToSend.append("coverImage", formData.coverImage);
+      }
+
+      const response = await api.post("/sellers/register", formDataToSend, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+
+      toast.success("Registration Successful!");
+      
+      // 🔥 Pura logic yahan hai: Form submit hote hi naye page pe bhej do
+      setTimeout(() => {
+        navigate("/seller/choose-plan", { state: { sellerId: response.data.seller?._id } });
+      }, 1000);
+      
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Registration failed. Try again.");
+    } finally {
       setLoading(false);
-      toast.success("Registration Successful! Please choose a plan.");
-      setStep(4); // Moving to Subscription Step
-    }, 1500);
+    }
   };
-
-  // Dummy Action for Plan Selection
-  const handlePlanSelection = (planName) => {
-    toast.success(`${planName} Plan Selected! Redirecting to Dashboard...`);
-    // Redirect logic yahan aayega baad me
-  };
-
-  // Pricing Table Data (Based on your image)
-  const pricingFeatures = [
-    { name: "Browse products", free: true, basic: true, premium: true },
-    { name: "Post buying requirement", free: true, basic: true, premium: true },
-    { name: "Seller registration", free: true, basic: true, premium: true },
-    { name: "Basic product listing", free: true, basic: true, premium: true },
-    { name: "Full product details", free: false, basic: true, premium: true },
-    { name: "Direct chat with buyers", free: false, basic: true, premium: true },
-    { name: "Product Timeline (Supply Chain)", free: false, basic: false, premium: true },
-    { name: "Platform visits & timeline creation", free: false, basic: false, premium: true },
-    { name: "Verified Genuine Badge", free: false, basic: false, premium: true },
-    { name: "Highest visibility in search results", free: false, basic: false, premium: true },
-    { name: "Photos, Videos & Certificates on timeline", free: false, basic: false, premium: true },
-  ];
 
   return (
     <div className="min-h-screen bg-slate-100 py-12 px-4 sm:px-6">
       <Toaster position="top-right" />
       
       <div className="max-w-5xl mx-auto">
-        
-        {/* Header Section */}
         <div className="text-center mb-10">
           <h1 className="text-3xl font-black text-slate-800 mb-2">
-            {step === 4 ? "Choose Your Plan" : "Become a Verified Exporter"}
+            Become a Verified Exporter
           </h1>
           <p className="text-slate-500">
-            {step === 4 
-              ? "Select the best subscription to grow your global reach." 
-              : "Register your business and connect with global buyers."}
+            Register your business and connect with global buyers.
           </p>
         </div>
 
-        {/* Progress Bar (Hide on Step 4) */}
-        {step < 4 && (
-          <div className="flex items-center justify-center mb-8 max-w-2xl mx-auto">
-            <div className={`flex flex-col items-center ${step >= 1 ? "text-blue-600" : "text-slate-400"}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mb-2 ${step >= 1 ? "bg-blue-600 text-white" : "bg-slate-200"}`}>1</div>
-              <span className="text-xs font-bold uppercase tracking-wider">Verification</span>
-            </div>
-            <div className={`flex-1 h-1 mx-4 rounded-full ${step >= 2 ? "bg-blue-600" : "bg-slate-200"}`}></div>
-            <div className={`flex flex-col items-center ${step >= 2 ? "text-blue-600" : "text-slate-400"}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mb-2 ${step >= 2 ? "bg-blue-600 text-white" : "bg-slate-200"}`}>2</div>
-              <span className="text-xs font-bold uppercase tracking-wider">Business</span>
-            </div>
-            <div className={`flex-1 h-1 mx-4 rounded-full ${step >= 3 ? "bg-blue-600" : "bg-slate-200"}`}></div>
-            <div className={`flex flex-col items-center ${step >= 3 ? "text-blue-600" : "text-slate-400"}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mb-2 ${step >= 3 ? "bg-blue-600 text-white" : "bg-slate-200"}`}>3</div>
-              <span className="text-xs font-bold uppercase tracking-wider">Documents</span>
-            </div>
+        {/* Progress Bar (Sirf 3 Steps) */}
+        <div className="flex items-center justify-center mb-8 max-w-2xl mx-auto">
+          <div className={`flex flex-col items-center ${step >= 1 ? "text-blue-600" : "text-slate-400"}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mb-2 ${step >= 1 ? "bg-blue-600 text-white" : "bg-slate-200"}`}>1</div>
+            <span className="text-xs font-bold uppercase tracking-wider">Verification</span>
           </div>
-        )}
+          <div className={`flex-1 h-1 mx-4 rounded-full ${step >= 2 ? "bg-blue-600" : "bg-slate-200"}`}></div>
+          <div className={`flex flex-col items-center ${step >= 2 ? "text-blue-600" : "text-slate-400"}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mb-2 ${step >= 2 ? "bg-blue-600 text-white" : "bg-slate-200"}`}>2</div>
+            <span className="text-xs font-bold uppercase tracking-wider">Business</span>
+          </div>
+          <div className={`flex-1 h-1 mx-4 rounded-full ${step === 3 ? "bg-blue-600" : "bg-slate-200"}`}></div>
+          <div className={`flex flex-col items-center ${step === 3 ? "text-blue-600" : "text-slate-400"}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mb-2 ${step === 3 ? "bg-blue-600 text-white" : "bg-slate-200"}`}>3</div>
+            <span className="text-xs font-bold uppercase tracking-wider">Documents</span>
+          </div>
+        </div>
 
-        {/* Main Form Wrapper */}
         <form onSubmit={step === 3 ? handleSubmit : (e) => e.preventDefault()} className="bg-white rounded-2xl shadow-xl overflow-hidden min-h-[400px]">
           
-          {/* ================= STEP 1: OTP VERIFICATION ================= */}
           {step === 1 && (
             <div className="p-8 md:p-12 max-w-xl mx-auto flex flex-col justify-center h-full">
               <div className="text-center mb-8">
@@ -180,7 +194,7 @@ const SellerRegistration = () => {
                 icon={Phone} 
                 type="tel" 
                 name="businessPhone" 
-                placeholder="+91 98765 43210" 
+                placeholder="Enter without +91 (e.g. 9876543210)" 
                 value={formData.businessPhone}
                 onChange={handleChange}
                 disabled={otpSent && !otpVerified} 
@@ -193,10 +207,10 @@ const SellerRegistration = () => {
               ) : (
                 <div className="mt-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
                   <InputField 
-                    label="Enter OTP (Use 1234)" 
+                    label="Enter OTP" 
                     icon={CheckCircle2} 
                     name="otp" 
-                    placeholder="Enter 4-digit OTP" 
+                    placeholder="Enter OTP" 
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
                   />
@@ -209,7 +223,6 @@ const SellerRegistration = () => {
             </div>
           )}
 
-          {/* ================= STEP 2: BUSINESS & LOCATION ================= */}
           {step === 2 && (
              <div className="animate-in fade-in zoom-in-95 duration-300">
               <div className="p-8 border-b border-slate-100">
@@ -239,7 +252,6 @@ const SellerRegistration = () => {
             </div>
           )}
 
-          {/* ================= STEP 3: LEGAL & MEDIA ================= */}
           {step === 3 && (
             <div className="animate-in fade-in zoom-in-95 duration-300">
               <div className="p-8 border-b border-slate-100">
@@ -266,84 +278,20 @@ const SellerRegistration = () => {
                     <input type="file" name="profileImage" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" />
                     <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3"><User size={24} /></div>
                     <p className="text-sm font-semibold text-slate-700">Upload Company Logo</p>
+                    <p className="text-xs text-slate-500 mt-1">{formData.profileImage ? formData.profileImage.name : ""}</p>
                   </div>
                   <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center cursor-pointer relative">
                     <input type="file" name="coverImage" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" />
                     <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3"><UploadCloud size={24} /></div>
                     <p className="text-sm font-semibold text-slate-700">Upload Cover Banner</p>
+                    <p className="text-xs text-slate-500 mt-1">{formData.coverImage ? formData.coverImage.name : ""}</p>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* ================= STEP 4: SUBSCRIPTION PLAN ================= */}
-          {step === 4 && (
-            <div className="p-4 md:p-8 animate-in fade-in zoom-in-95 duration-500">
-              <div className="overflow-x-auto rounded-xl border border-slate-200">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-800 text-white">
-                      <th className="p-4 font-semibold border-b border-r border-slate-700 min-w-[250px]">Feature</th>
-                      <th className="p-4 font-semibold border-b border-r border-slate-700 text-center w-48">Free</th>
-                      <th className="p-4 font-semibold border-b border-r border-slate-700 text-center w-48">Basic (Paid)</th>
-                      <th className="p-4 font-semibold border-b border-slate-700 text-center w-48 bg-blue-600">Premium (Paid)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-sm text-slate-700 bg-white">
-                    {pricingFeatures.map((row, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                        <td className="p-4 border-b border-r border-slate-200 font-medium">{row.name}</td>
-                        <td className="p-4 border-b border-r border-slate-200 text-center">
-                          {row.free ? <Check size={20} className="text-green-600 mx-auto" /> : <X size={20} className="text-slate-300 mx-auto" />}
-                        </td>
-                        <td className="p-4 border-b border-r border-slate-200 text-center">
-                          {row.basic ? <Check size={20} className="text-green-600 mx-auto" /> : <X size={20} className="text-slate-300 mx-auto" />}
-                        </td>
-                        <td className="p-4 border-b border-slate-200 text-center bg-blue-50/30">
-                          {row.premium ? <Check size={20} className="text-blue-600 mx-auto" /> : <X size={20} className="text-slate-300 mx-auto" />}
-                        </td>
-                      </tr>
-                    ))}
-                    {/* Action Buttons Row */}
-                    <tr>
-                      <td className="p-6 border-r border-slate-200 bg-slate-50"></td>
-                      <td className="p-6 border-r border-slate-200 text-center align-top bg-white">
-                        <button 
-                          type="button" 
-                          onClick={() => handlePlanSelection('Free')}
-                          className="w-full py-2.5 px-4 rounded-lg font-bold text-sm bg-white border-2 border-slate-800 text-slate-800 hover:bg-slate-800 hover:text-white transition-all shadow-sm"
-                        >
-                          Continue with Free Trial
-                        </button>
-                      </td>
-                      <td className="p-6 border-r border-slate-200 text-center align-top bg-white">
-                        <button 
-                          type="button" 
-                          onClick={() => handlePlanSelection('Basic')}
-                          className="w-full py-2.5 px-4 rounded-lg font-bold text-sm bg-slate-800 text-white hover:bg-slate-900 transition-all shadow-md"
-                        >
-                          Choose Basic
-                        </button>
-                      </td>
-                      <td className="p-6 text-center align-top bg-blue-50/30">
-                        <button 
-                          type="button" 
-                          onClick={() => handlePlanSelection('Premium')}
-                          className="w-full py-2.5 px-4 rounded-lg font-bold text-sm bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md shadow-blue-600/30"
-                        >
-                          Choose Premium
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* ================= BOTTOM NAVIGATION BUTTONS (Hide on Step 4) ================= */}
-          {(step > 1 && step < 4) && (
+          {step > 1 && (
             <div className="p-6 border-t border-slate-200 bg-white flex justify-between items-center">
               <button
                 type="button"

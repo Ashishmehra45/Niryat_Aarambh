@@ -11,6 +11,8 @@ import BuyerRegistration from '../Buyer/Register';
 import SellerRegistration from '../Seller/SellerRegister';
 import AdminDashboard from '../Admin/AdminDashbord';
 import AdminLogin from '../Admin/Admin_login';
+import ChoosePlan from '../pages/ChoosePlan';
+import SellerLogin from '../Seller/SellerLogin';
 
 function AppRoutes() {
   return (
@@ -31,6 +33,10 @@ function AppRoutes() {
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/buyer/register" element={<BuyerRegistration />} />
           <Route path="/seller/register" element={<SellerRegistration />} />
+          <Route path="/choose-plan" element={<ChoosePlan />} />
+          <Route path="/seller/login" element={<SellerLogin />} />
+          
+
 
           {/* 🛒 BUYER */}
           <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
