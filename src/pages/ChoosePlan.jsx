@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Check, X, ShieldCheck } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+
 import api from "../utils/axiosConfig"; // Apna axios config path check kar lena
 
 const ChoosePlan = () => {
@@ -31,7 +32,7 @@ const ChoosePlan = () => {
   const handlePlanSelection = async (planName) => {
     if (!sellerId) {
       toast.error("Seller ID missing! Please register first.");
-      return navigate("/seller/register"); // Agar direct open kiya toh wapas bhej do
+      return navigate("/seller/dashboard"); // Agar direct open kiya toh wapas bhej do
     }
 
     setLoading(true);
