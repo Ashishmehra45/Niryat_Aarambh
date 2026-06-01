@@ -176,7 +176,7 @@ const SellerLogin = () => {
             Don't have an account? <a href="/seller/register" className="text-blue-600 font-bold hover:underline">Register here</a>
           </p>
         </div>
-
+            
       </div>
     </div>
   );
