@@ -175,9 +175,12 @@ const SellerDashboard = () => {
   const fetchMyProducts = async () => {
     setFetchingProducts(true);
     try {
-      const token = localStorage.getItem("sellerToken");
+      // Token explicitly nikal kar bhejo
+      const token = localStorage.getItem("sellerToken"); 
       const res = await api.get("/sellers/my-products", {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: {
+          Authorization: `Bearer ${token}` // 🔥 Ye miss tha
+        }
       });
       setMyProducts(res.data.products || []);
     } catch (error) {
@@ -190,13 +193,17 @@ const SellerDashboard = () => {
   };
 
   // 🔥 FIX 2: Explicit Token AND Correct Backend Route
+ // 🔥 FETCH INQUIRIES LOGIC
   const fetchInquiries = async () => {
     setFetchingInquiries(true);
     try {
       const token = localStorage.getItem("sellerToken"); 
       const res = await api.get("/sellers/my-inquiries", {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: {
+          Authorization: `Bearer ${token}` // 🔥 Explicitly passing token
+        }
       });
+      console.log("Inquiries from DB:", res.data); 
       setInquiries(res.data.inquiries || []);
     } catch (error) {
       if (error.response && error.response.status !== 401) {
@@ -222,6 +229,7 @@ const SellerDashboard = () => {
   };
 
   // --- SUBMIT PRODUCT LOGIC (🔥 TIMELINE SAVE FIX) ---
+ // --- SUBMIT PRODUCT LOGIC ---
   const handleSubmitProduct = async (e) => {
     e.preventDefault();
 
@@ -230,13 +238,13 @@ const SellerDashboard = () => {
     }
 
     setLoading(true);
+    const token = localStorage.getItem("sellerToken"); // 🔥 Get Token
     const formData = new FormData();
     formData.append("sellerId", localStorage.getItem("sellerId"));
 
     Object.keys(productData).forEach((key) => formData.append(key, productData[key]));
     if (productImage) formData.append("productImage", productImage);
 
-    // 🔥 FIX 3: Timeline Index Alignment - Filter pehle hoga, phir mapping aur appending usi order me hogi
     const validTimelineEvents = timelineEvents.filter(
       (event) => event.title.trim() !== "" || event.date.trim() !== "" || event.description.trim() !== "" || event.image !== null
     );
@@ -250,7 +258,6 @@ const SellerDashboard = () => {
     
     formData.append("timelineData", JSON.stringify(cleanTimelineData));
 
-    // Append images matched exactly to valid indices
     validTimelineEvents.forEach((event, index) => {
       if (event.image) {
         formData.append(`timelineImage_${index}`, event.image);
@@ -260,12 +267,18 @@ const SellerDashboard = () => {
     try {
       if (editingProductId) {
         await api.put(`/sellers/update-product/${editingProductId}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { 
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}` // 🔥 Token here
+          },
         });
         toast.success("Product timeline & details updated!");
       } else {
         await api.post("/sellers/add-product", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { 
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}` // 🔥 Token here
+          },
         });
         toast.success("Product added successfully!");
       }
