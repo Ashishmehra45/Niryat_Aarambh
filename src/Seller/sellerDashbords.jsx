@@ -93,7 +93,6 @@ const SellerDashboard = () => {
     setIsAddModalOpen(true);
   };
 
-  // Image Preview & Timeline States
   const [productImagePreview, setProductImagePreview] = useState(null);
   const [timelineEvents, setTimelineEvents] = useState([
     { date: "", title: "", description: "", image: null, preview: null },
@@ -145,11 +144,11 @@ const SellerDashboard = () => {
   });
   const [productImage, setProductImage] = useState(null);
 
-  // --- MENU ITEMS (Updated Label & ID for Inquiries) ---
+  // --- MENU ITEMS ---
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, tiers: ["Free", "Basic", "Premium"] },
     { id: "products", label: "My Products", icon: Package, tiers: ["Free", "Basic", "Premium"] },
-    { id: "inquiries", label: "Buyer Inquiries", icon: MessageSquare, tiers: ["Free", "Basic", "Premium"] }, // 🔥 Dedicated Inquiries Tab
+    { id: "inquiries", label: "Buyer Inquiries", icon: MessageSquare, tiers: ["Free", "Basic", "Premium"] }, 
     { id: "timeline", label: "Supply Chain Timeline", icon: GitCommit, tiers: ["Premium"] },
     { id: "analytics", label: "Visits & Analytics", icon: BarChart2, tiers: ["Premium"] },
     { id: "badge", label: "Verified Badge", icon: ShieldCheck, tiers: ["Premium"] },
@@ -172,10 +171,14 @@ const SellerDashboard = () => {
     }
   }, [activeTab]);
 
+  // 🔥 FIX 1: Explicitly pass Authorization Token for Production
   const fetchMyProducts = async () => {
     setFetchingProducts(true);
     try {
-      const res = await api.get("/sellers/my-products");
+      const token = localStorage.getItem("sellerToken");
+      const res = await api.get("/sellers/my-products", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setMyProducts(res.data.products || []);
     } catch (error) {
       if (error.response && error.response.status !== 401) {
@@ -186,20 +189,14 @@ const SellerDashboard = () => {
     }
   };
 
-  // 🔥 FETCH INQUIRIES LOGIC (FIXED 403 FORBIDDEN)
+  // 🔥 FIX 2: Explicit Token AND Correct Backend Route
   const fetchInquiries = async () => {
     setFetchingInquiries(true);
     try {
-      // LocalStorage se token nikal kar explicitly bhej rahe hain
       const token = localStorage.getItem("sellerToken"); 
-      
       const res = await api.get("/sellers/my-inquiries", {
-        headers: {
-          Authorization: `Bearer ${token}` // Ye 403 error ko fix kar dega
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
-      
-      console.log("Inquiries from DB:", res.data); 
       setInquiries(res.data.inquiries || []);
     } catch (error) {
       if (error.response && error.response.status !== 401) {
@@ -239,23 +236,21 @@ const SellerDashboard = () => {
     Object.keys(productData).forEach((key) => formData.append(key, productData[key]));
     if (productImage) formData.append("productImage", productImage);
 
-    // 🔥 FIX: Filter out completely empty steps BEFORE appending
+    // 🔥 FIX 3: Timeline Index Alignment - Filter pehle hoga, phir mapping aur appending usi order me hogi
     const validTimelineEvents = timelineEvents.filter(
       (event) => event.title.trim() !== "" || event.date.trim() !== "" || event.description.trim() !== "" || event.image !== null
     );
 
-   // 🔥 FIX: Purani Timeline Images ko retain karne ka logic
     const cleanTimelineData = validTimelineEvents.map((event) => ({
       date: event.date,
       title: event.title,
       description: event.description,
-      // Agar preview ek valid URL (Cloudinary link) hai, toh usko bhej do
       existingImage: event.preview && event.preview.startsWith("http") ? event.preview : null
     }));
     
     formData.append("timelineData", JSON.stringify(cleanTimelineData));
 
-    // Append images exactly matching the valid steps
+    // Append images matched exactly to valid indices
     validTimelineEvents.forEach((event, index) => {
       if (event.image) {
         formData.append(`timelineImage_${index}`, event.image);
