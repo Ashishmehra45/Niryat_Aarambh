@@ -186,10 +186,20 @@ const SellerDashboard = () => {
     }
   };
 
+  // 🔥 FETCH INQUIRIES LOGIC (FIXED 403 FORBIDDEN)
   const fetchInquiries = async () => {
     setFetchingInquiries(true);
     try {
-      const res = await api.get("/sellers/my-inquiries");
+      // LocalStorage se token nikal kar explicitly bhej rahe hain
+      const token = localStorage.getItem("sellerToken"); 
+      
+      const res = await api.get("/sellers/my-inquiries", {
+        headers: {
+          Authorization: `Bearer ${token}` // Ye 403 error ko fix kar dega
+        }
+      });
+      
+      console.log("Inquiries from DB:", res.data); 
       setInquiries(res.data.inquiries || []);
     } catch (error) {
       if (error.response && error.response.status !== 401) {
