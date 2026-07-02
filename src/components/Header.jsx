@@ -119,7 +119,7 @@ const Header = () => {
         {/* Top Row for Mobile: Logo + Profile */}
         <div className="flex w-full sm:w-auto items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
-            <Menu className="sm:hidden text-slate-700" size={24} />
+           
             <img src={logo} alt="Transparent B2B Logo" className="w-26 h-26 ml-4 object-contain rounded-full" />
             <div className="flex flex-col justify-center mt-1">
               <h1 className="text-[14px] sm:text-[15px] font-black text-slate-800 uppercase leading-none tracking-tight">
