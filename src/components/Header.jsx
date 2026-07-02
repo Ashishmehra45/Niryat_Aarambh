@@ -117,20 +117,26 @@ const Header = () => {
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 sm:py-0 sm:h-16 flex flex-col sm:flex-row items-center justify-between border-b gap-3 sm:gap-0">
         
         {/* Top Row for Mobile: Logo + Profile */}
-        <div className="flex w-full sm:w-auto items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
-           
-            <img src={logo} alt="Transparent B2B Logo" className="w-26 h-26 ml-4 object-contain rounded-full" />
-            <div className="flex flex-col justify-center mt-1">
-              <h1 className="text-[14px] sm:text-[15px] font-black text-slate-800 uppercase leading-none tracking-tight">
+       <div className="flex w-full sm:w-auto items-center justify-between px-4 sm:px-0 py-2">
+          {/* Brand Logo and Title Group */}
+          <div className="flex items-center gap-3 cursor-pointer select-none" onClick={() => navigate("/")}>
+            <img 
+              src={logo} 
+              alt="Transparent B2B Logo" 
+              className="w-20 h-20  object-contain rounded-full " 
+            />
+            <div className="flex flex-col justify-center">
+              <h1 className="text-[13px] sm:text-[15px] font-black text-slate-800 uppercase leading-[1.1] tracking-tight">
                 Transparent<br />Trade Exchange
               </h1>
-              <p className="text-[8px] text-slate-500 font-bold tracking-widest uppercase mt-0.5">By Niryat Aarambh</p>
+              <p className="text-[8px] text-slate-500 font-bold tracking-widest uppercase mt-0.5">
+                By Niryat Aarambh
+              </p>
             </div>
           </div>
 
-          {/* Mobile Profile Icon */}
-          <div className="flex sm:hidden items-center">
+          {/* Mobile Profile Icon (Perfectly Vertically Aligned) */}
+          <div className="flex sm:hidden items-center justify-center min-w-[40px] h-10">
             <UserProfileSection />
           </div>
         </div>
