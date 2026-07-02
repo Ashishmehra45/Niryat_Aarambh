@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Menu, Search, ChevronDown, User } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import logo from "../../public/image-removebg-preview.png"; // Tera logo ka path yahan set kar
 
 const Header = () => {
   const navigate = useNavigate();
@@ -119,9 +120,7 @@ const Header = () => {
         <div className="flex w-full sm:w-auto items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
             <Menu className="sm:hidden text-slate-700" size={24} />
-            <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-[7px] text-white font-black text-center leading-tight shadow-md">
-              NIRYAT<br/>AARAMBH
-            </div>
+            <img src={logo} alt="Transparent B2B Logo" className="w-26 h-26 ml-4 object-contain rounded-full" />
             <div className="flex flex-col justify-center mt-1">
               <h1 className="text-[14px] sm:text-[15px] font-black text-slate-800 uppercase leading-none tracking-tight">
                 Transparent<br />Trade Exchange
