@@ -1,19 +1,19 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React from "react";
+import { Routes, Route } from "react-router-dom";
 
 // 🧩 Components Import
-import Header from '../components/Header'; 
-import ProtectedRoute from '../components/protectedRoutes'; // 🔥 Yahan path check kar lena ki ProtectedRoute kahan hai
-
+import Header from "../components/Header";
+import ProtectedRoute from "../components/protectedRoutes"; // 🔥 Yahan path check kar lena ki ProtectedRoute kahan hai
+import Footer from "../components/Footer"; // Agar Footer bhi har page par chahiye toh import kar lo
 // 📄 Pages Imports
-import BuyerDashboard from '../Buyer/BuyerDashbord';
-import SellerDashboard from '../Seller/sellerDashbords';
-import BuyerRegistration from '../Buyer/Register';
-import SellerRegistration from '../Seller/SellerRegister';
-import AdminDashboard from '../Admin/AdminDashbord';
-import AdminLogin from '../Admin/Admin_login';
-import ChoosePlan from '../pages/ChoosePlan';
-import SellerLogin from '../Seller/SellerLogin';
+import BuyerDashboard from "../Buyer/BuyerDashbord";
+import SellerDashboard from "../Seller/sellerDashbords";
+import BuyerRegistration from "../Buyer/Register";
+import SellerRegistration from "../Seller/SellerRegister";
+import AdminDashboard from "../Admin/AdminDashbord";
+import AdminLogin from "../Admin/Admin_login";
+import ChoosePlan from "../pages/ChoosePlan";
+import SellerLogin from "../Seller/SellerLogin";
 
 function AppRoutes() {
   return (
@@ -28,7 +28,6 @@ function AppRoutes() {
       ============================================= */}
       <div className="flex-grow bg-slate-50">
         <Routes>
-          
           {/* 🔓 PUBLIC ROUTES (Bina Protection ke) */}
           <Route path="/" element={<BuyerDashboard />} />
           <Route path="/admin/login" element={<AdminLogin />} />
@@ -41,27 +40,27 @@ function AppRoutes() {
           <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
 
           {/* 🏢 SELLER (🔥 SECURED WITH PROTECTED ROUTE) */}
-          <Route 
-            path="/seller/dashboard" 
+          <Route
+            path="/seller/dashboard"
             element={
               <ProtectedRoute role="seller">
                 <SellerDashboard />
               </ProtectedRoute>
-            } 
+            }
           />
-          
+
           {/* 👑 ADMIN (🔥 SECURED) */}
-          <Route 
-            path="/admin/dashboard" 
+          <Route
+            path="/admin/dashboard"
             element={
               <ProtectedRoute role="superadmin">
                 <AdminDashboard />
               </ProtectedRoute>
-            } 
+            }
           />
-          
         </Routes>
       </div>
+      <Footer />
     </div>
   );
 }
