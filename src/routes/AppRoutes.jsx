@@ -35,6 +35,7 @@ function AppRoutes() {
           <Route path="/seller/register" element={<SellerRegistration />} />
           <Route path="/seller/choose-plan" element={<ChoosePlan />} />
           <Route path="/seller/login" element={<SellerLogin />} />
+          <Route path="/admin" element={<AdminDashboard />} />
 
           {/* 🛒 BUYER (Ise bhi baad me protect kar sakte ho) */}
           <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
@@ -50,14 +51,14 @@ function AppRoutes() {
           />
 
           {/* 👑 ADMIN (🔥 SECURED) */}
-          <Route
+          {/* <Route
             path="/admin/dashboard"
             element={
               <ProtectedRoute role="superadmin">
                 <AdminDashboard />
               </ProtectedRoute>
             }
-          />
+          /> */}
         </Routes>
       </div>
       <Footer />
