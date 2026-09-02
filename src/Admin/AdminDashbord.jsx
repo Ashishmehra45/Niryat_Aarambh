@@ -376,10 +376,24 @@ const PostRequirementsView = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 🔴 API ENDPOINT: Fetch all buyer public requirements
-    api.get("/admin/requirements")
+    // 1. Token nikal
+    const token = localStorage.getItem("adminToken");
+
+    if (!token) {
+      toast.error("Admin Login Required");
+      setLoading(false);
+      return;
+    }
+
+    // 2. Token ke sath API call kar
+    api.get("/admin/requirements", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
       .then(res => setRequirements(res.data.requirements || []))
       .catch(err => {
+        console.error("Requirements Error:", err);
         // Fallback Dummy Data
         setRequirements([
           { _id: 1, buyerName: "Tech Corp", productName: "Organic Cotton", quantity: "10", unit: "Tons", createdAt: "2026-02-16" },
@@ -411,7 +425,7 @@ const PostRequirementsView = () => {
           </p>
           <div className="pt-4 border-t border-slate-100">
             <p className="text-xs text-slate-500">Posted by Buyer:</p>
-            <p className="font-bold text-slate-700">{req.buyerName}</p>
+            <p className="font-bold text-slate-700">{req.buyerName} <br/> <span className="text-xs font-normal text-slate-500">{req.buyerPhone}</span></p>
           </div>
         </div>
       ))}
