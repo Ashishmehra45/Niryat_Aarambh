@@ -65,14 +65,25 @@ const SellersAndProductsView = ({ subViewState, setSubViewState }) => {
 
   // FETCH SELLERS
  // FETCH ALL SELLERS
+  // FETCH ALL SELLERS
   useEffect(() => {
     if (!subViewState) {
       setLoading(true);
       
-      // 🔥 LocalStorage se token nikal 
-      const token = localStorage.getItem("adminToken"); // Agar 'adminToken' se save kiya hai, toh wo likh dena
+      // 1. Token nikal
+      const token = localStorage.getItem("adminToken"); 
+      console.log("🔥 Admin Token Sending to Backend:", token); // Console me check kar kya aa raha hai
 
-      // 🔴 API ENDPOINT: Fetch all sellers for admin with Authorization Header
+      // 2. Agar token nahi hai toh API call hi mat kar, direct error de
+      if (!token || token === "undefined" || token === "null") {
+        console.error("Token missing! You are not logged in as Admin.");
+        toast.error("Admin login required!");
+        setLoading(false);
+        // navigate("/admin/login"); // Tujhe wapas login par bhej dega
+        return; 
+      }
+
+      // 3. API Call with Token
       api.get("/admin/sellers", {
         headers: {
           Authorization: `Bearer ${token}`
@@ -82,12 +93,12 @@ const SellersAndProductsView = ({ subViewState, setSubViewState }) => {
           setSellers(res.data.sellers || []);
         })
         .catch(err => {
-          // Fallback Dummy Data
-          console.error("Fetch sellers error:", err);
-          setSellers([
-            { _id: 1, businessName: "Agro Exports Pvt Ltd", businessEmail: "contact@agroexports.com", businessPhone: "+91 9876543210", verifiedExporter: "Verified", productCount: 12 },
-            { _id: 2, businessName: "Global Spices India", businessEmail: "sales@globalspices.in", businessPhone: "+91 8765432109", verifiedExporter: "Pending", productCount: 4 },
-          ]);
+          console.error("Fetch sellers error:", err.response?.data || err.message);
+          // Agar 401 aaye toh token expire ho gaya hai, usko delete maro
+          if (err.response?.status === 401) {
+            localStorage.removeItem("adminToken");
+            toast.error("Session Expired. Please login again.");
+          }
         })
         .finally(() => setLoading(false));
     }
@@ -282,15 +293,28 @@ const SellersAndProductsView = ({ subViewState, setSubViewState }) => {
 // 🧩 COMPONENT 3: GLOBAL INQUIRIES
 // ==========================================
 const GlobalInquiriesView = () => {
-  const [inquiries, setInquiries] = useState([]);
+ const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 🔴 API ENDPOINT: Fetch all platform inquiries
-    api.get("/admin/inquiries")
+    const token = localStorage.getItem("adminToken"); // 🔥 Token nikala
+
+    if (!token) {
+      toast.error("Admin Login Required");
+      setLoading(false);
+      return;
+    }
+
+    // 🔥 API me Header add kiya
+    api.get("/admin/inquiries", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
       .then(res => setInquiries(res.data.inquiries || []))
       .catch(err => {
-        // Fallback Dummy Data
+        console.error("Inquiries Error:", err);
+        // Fallback Dummy Data agar backend API fail ho
         setInquiries([
           { _id: 1, buyerName: "John Doe (USA)", sellerName: "Agro Exports Pvt Ltd", productName: "Red Tomatoes", quantityRequired: "500", unit: "Kg", createdAt: "2026-02-15", status: "Replied" },
           { _id: 2, buyerName: "Rahul Verma (IND)", sellerName: "Global Spices", productName: "Turmeric Powder", quantityRequired: "1", unit: "Ton", createdAt: "2026-02-14", status: "Unread" },
