@@ -4,6 +4,8 @@ import {
   Star,
   CheckCircle,
   ShieldCheck,
+   CheckCircle2,
+   Store,
   ChevronDown,
   Menu,
   Loader2,
@@ -48,12 +50,15 @@ const PostRequirementForm = () => {
     setLoading(true);
     try {
       // API call (Assuming 'api' is an Axios instance)
-      const response = await api.post('/buyers/post-requirements', formData);
+      const response = await api.post("/buyers/post-requirements", formData);
 
       // Axios automatically parses JSON, you don't need response.json()
       // You can access your backend message via response.data.message
-      toast.success(response.data.message || "Requirement posted successfully! Sellers will contact you shortly.");
-      
+      toast.success(
+        response.data.message ||
+          "Requirement posted successfully! Sellers will contact you shortly.",
+      );
+
       setIsOpen(false);
       setFormData({
         buyerName: "",
@@ -64,7 +69,10 @@ const PostRequirementForm = () => {
       });
     } catch (error) {
       // Axios puts backend error responses inside error.response.data
-      const errorMessage = error.response?.data?.message || error.message || "Failed to post requirement.";
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to post requirement.";
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -313,7 +321,27 @@ const ExporterListing = () => {
                   : "border border-slate-200 hover:border-slate-300 hover:shadow-md"
               }`}
             >
+              {/* 1. IMAGE & TOP BADGES SECTION */}
               <div className="h-48 overflow-hidden bg-slate-50 relative shrink-0 p-3">
+                {/* Category Badge */}
+                <span className="absolute top-3 left-3 z-10 bg-[#1f5f67]/90 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-1 rounded uppercase tracking-wider shadow-sm">
+                  {prod.category}
+                </span>
+
+                {/* Trust Badges (Only show if Verified from Admin) */}
+                <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5 items-end">
+                  {prod.verifiedExporter === "Verified" && (
+                    <span className="bg-emerald-500/90 backdrop-blur-sm text-white text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 shadow-sm">
+                      <ShieldCheck size={10} /> Exporter
+                    </span>
+                  )}
+                  {prod.gstVerified === "Verified" && (
+                    <span className="bg-blue-500/90 backdrop-blur-sm text-white text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 shadow-sm">
+                      <CheckCircle2 size={10} /> GST Verified
+                    </span>
+                  )}
+                </div>
+
                 {prod.productImage ? (
                   <img
                     src={prod.productImage}
@@ -327,38 +355,81 @@ const ExporterListing = () => {
                 )}
               </div>
 
-              <div className="px-4 pb-4 bg-white flex-1 flex flex-col">
-                <h4 className="font-bold text-[13px] sm:text-sm text-slate-800 mt-2 h-10 line-clamp-2 leading-tight">
+              {/* 2. CONTENT SECTION */}
+              <div className="px-4 pb-4 bg-white flex-1 flex flex-col pt-4">
+                {/* Title & Description */}
+                <h4
+                  className="font-black text-[14px] sm:text-[15px] text-slate-800 line-clamp-1 leading-tight"
+                  title={prod.productName}
+                >
                   {prod.productName}
                 </h4>
-                <div className="mt-2">
-                  <p className="text-base sm:text-lg font-black text-slate-900">
+                <p className="text-[11px] text-slate-500 mt-1.5 line-clamp-2 min-h-[32px] leading-relaxed">
+                  {prod.description ||
+                    "No product description available at the moment."}
+                </p>
+
+                {/* Price, MOQ & Stock Alert */}
+                <div className="mt-3 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                  <p className="text-lg sm:text-xl font-black text-[#1f5f67] leading-none">
                     ${prod.price}{" "}
-                    <span className="text-xs font-medium text-slate-500">
+                    <span className="text-[11px] font-bold text-slate-500 uppercase">
                       / {prod.unit}
                     </span>
                   </p>
-                  <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">
-                    MOQ: {prod.moq} {prod.moqUnit}
-                  </p>
-                </div>
-                <div className="mt-auto pt-3">
-                  <p className="text-[11px] sm:text-xs font-bold text-slate-800">
-                    {prod.companyName || "Verified Seller"}
-                  </p>
-                  <div className="flex items-center gap-1 mt-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        size={10}
-                        className="text-yellow-400 fill-yellow-400"
-                      />
-                    ))}
-                    <span className="text-[10px] text-slate-600 ml-1">4.5</span>
+                  <div className="flex justify-between items-center mt-2">
+                    <p className="text-[10px] sm:text-[11px] font-bold text-slate-600">
+                      MOQ:{" "}
+                      <span className="text-slate-800">
+                        {prod.moq} {prod.moqUnit}
+                      </span>
+                    </p>
+                    <span
+                      className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded ${prod.stock > 0 && prod.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}
+                    >
+                      {prod.stock > 0 && prod.status === "active"
+                        ? `In Stock (${prod.stock})`
+                        : "Out of Stock"}
+                    </span>
                   </div>
                 </div>
-                {/* Clicking button also opens Modal via parent div click */}
-                <button className="w-full mt-4 bg-[#1f5f67] hover:bg-[#15464c] text-white py-2 rounded-lg font-bold text-sm transition-colors shadow-md">
+
+                {/* Company, Rating & Extra Details */}
+                <div className="mt-auto pt-3 border-t border-slate-100">
+                  <p className="text-[11px] font-bold text-slate-800 flex items-center gap-1.5 truncate">
+                    <Store size={12} className="text-slate-400 shrink-0" />
+                    {prod.companyName}
+                  </p>
+
+                  <div className="flex items-center justify-between mt-2">
+                    {/* REAL Dynamic Ratings based on DB */}
+                    <div className="flex items-center gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          size={10}
+                          className={`${i < Math.floor(prod.rating || 0) ? "text-yellow-400 fill-yellow-400" : "text-slate-200 fill-slate-200"}`}
+                        />
+                      ))}
+                      <span className="text-[10px] font-bold text-slate-600 ml-1.5">
+                        {prod.rating || 0}{" "}
+                        <span className="font-medium text-slate-400">
+                          ({prod.totalReviews || 0})
+                        </span>
+                      </span>
+                    </div>
+
+                    {/* Timeline Indicator (Agar product me trackable timeline steps hain) */}
+                    {prod.productTimeline &&
+                      prod.productTimeline.length > 0 && (
+                        <span className="text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded flex items-center gap-1">
+                          <GitCommit size={10} /> Trackable
+                        </span>
+                      )}
+                  </div>
+                </div>
+
+                <button className="w-full mt-4 bg-[#1f5f67] hover:bg-[#15464c] text-white py-2.5 rounded-lg font-bold text-sm transition-colors shadow-md flex items-center justify-center gap-2">
                   View Details & Contact
                 </button>
               </div>
